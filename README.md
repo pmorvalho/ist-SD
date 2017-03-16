@@ -1,14 +1,12 @@
 # Projeto de Sistemas Distribuídos 2016-2017 #
 
-Grupo CXX
-*(preencher com identificador de grupo e depois apagar esta linha)*
+Grupo A68
 
-... ... ...
+João silveira	80789	joao.silveira@tecnico.ulisboa.pt
 
-... ... ...
+Pedro Orvalho	81151	pedro.orvalho@tecnico.ulisboa.pt
 
-... ... ...
-*(preencher com nome, número e email de membro do grupo e depois apagar esta linha)*
+Rodrigo Mira	81271	rodrigo.mira@tecnico.ulisboa.pt
 
 
 -------------------------------------------------------------------------------
