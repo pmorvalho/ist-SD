@@ -2,11 +2,11 @@
 
 Grupo A68
 
-João Silveira |  80789 |  joao.silveira@tecnico.ulisboa.pt
-
-Pedro Orvalho |  81151 |  pedro.orvalho@tecnico.ulisboa.pt
-
-Rodrigo Mira |  81271 |  rodrigo.mira@tecnico.ulisboa.pt
+| Número | Nome | Email | GitHub |
+| --------- | ------- | ------  | -------- |
+| 80789   | João Silveira   | joao.silveira@tecnico.ulisboa.pt    | nowitworks |
+| 81151    | Pedro Orvalho | pedro.orvalho@tecnico.ulisboa.pt    | pmorvalho |
+| 81271  | Rodrigo Mira | rodrigo.mira@tecnico.ulisboa.pt | miraodasilva |
 
 
 -------------------------------------------------------------------------------
