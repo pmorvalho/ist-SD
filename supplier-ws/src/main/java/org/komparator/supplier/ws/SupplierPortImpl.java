@@ -10,16 +10,15 @@ import org.komparator.supplier.domain.Purchase;
 import org.komparator.supplier.domain.QuantityException;
 import org.komparator.supplier.domain.Supplier;
 
-// TODO
-//@WebService(
-//		endpointInterface = "org.komparator.supplier.ws.SupplierPortType", 
-//		wsdlLocation = "...", 
-//		name = "SupplierWebService", 
-//		portName = "...Port", 
-//		targetNamespace = "...", 
-//		serviceName = "...Service"
-//)
-public class SupplierPortImpl { // implements SupplierPortType {
+@WebService(
+		endpointInterface = "org.komparator.supplier.ws.SupplierPortType", 
+		wsdlLocation = "supplier.1_0.wsdl", 
+		name = "SupplierWebService", 
+		portName = "SupplierPort", 
+		targetNamespace = "http://ws.supplier.komparator.org/", 
+		serviceName = "SupplierService"
+)
+public class SupplierPortImpl implements SupplierPortType {
 
 	// end point manager
 	private SupplierEndpointManager endpointManager;
@@ -29,7 +28,8 @@ public class SupplierPortImpl { // implements SupplierPortType {
 	}
 
 	// Main operations -------------------------------------------------------
-
+	
+	@Override
 	public ProductView getProduct(String productId) throws BadProductId_Exception {
 		// check product id
 		if (productId == null)
@@ -49,28 +49,58 @@ public class SupplierPortImpl { // implements SupplierPortType {
 		// product not found
 		return null;
 	}
-
+	
+	@Override
 	public List<ProductView> searchProducts(String descText) throws BadText_Exception {
-		// TODO
+		// check product id
+		if (descText == null)
+			throwBadText("Product description cannot be null!");
+		descText = descText.trim();
+		if (descText.length() == 0)
+			throwBadText("Product description cannot be empty or whitespace!");
 		
+		List<ProductView> result = new ArrayList<ProductView>();
+		List<ProductView> products = listProducts();
 		
-		
-		
-		return null;
-	}
+		for (ProductView p: products) {
+			if(p.getDesc().toLowerCase().contains(descText.toLowerCase())){
+				result.add(p);
+			}
+		}
 
+		return result;
+	}
+	
+	@Override
 	public String buyProduct(String productId, int quantity)
 			throws BadProductId_Exception, BadQuantity_Exception, InsufficientQuantity_Exception {
-		// TODO
 		
+		// check product id
+		if (productId == null)
+			throwBadProductId("Product identifier cannot be null!");
+		productId = productId.trim();
+		if (productId.length() == 0)
+			throwBadProductId("Product identifier cannot be empty or whitespace!");
 		
+		if (quantity <= 0) {
+			throwBadQuantity("Quantity must be higher than 0");
+		}
 		
+		Supplier supplier = Supplier.getInstance();
+		
+		try {
+			return supplier.buyProduct(productId, quantity);	
+		}
+		catch (QuantityException qe) {
+			throwInsufficientQuantity("Cannot buy that many products");
+		}
 		
 		return null;
 	}
 
 	// Auxiliary operations --------------------------------------------------
-
+	
+	@Override
 	public String ping(String name) {
 		if (name == null || name.trim().length() == 0)
 			name = "friend";
@@ -82,11 +112,13 @@ public class SupplierPortImpl { // implements SupplierPortType {
 		builder.append(" from ").append(wsName);
 		return builder.toString();
 	}
-
+	
+	@Override
 	public void clear() {
 		Supplier.getInstance().reset();
 	}
-
+	
+	@Override
 	public void createProduct(ProductView productToCreate) throws BadProductId_Exception, BadProduct_Exception {
 		// check null
 		if (productToCreate == null)
@@ -115,7 +147,8 @@ public class SupplierPortImpl { // implements SupplierPortType {
 		Supplier s = Supplier.getInstance();
 		s.registerProduct(productId, productDesc, quantity, price);
 	}
-
+	
+	@Override
 	public List<ProductView> listProducts() {
 		Supplier supplier = Supplier.getInstance();
 		List<ProductView> pvs = new ArrayList<ProductView>();
@@ -126,7 +159,8 @@ public class SupplierPortImpl { // implements SupplierPortType {
 		}
 		return pvs;
 	}
-
+	
+	@Override
 	public List<PurchaseView> listPurchases() {
 		Supplier supplier = Supplier.getInstance();
 		List<PurchaseView> pvs = new ArrayList<PurchaseView>();
