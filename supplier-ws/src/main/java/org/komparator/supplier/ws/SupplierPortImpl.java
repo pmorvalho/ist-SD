@@ -63,7 +63,9 @@ public class SupplierPortImpl implements SupplierPortType {
 		List<ProductView> products = listProducts();
 		
 		for (ProductView p: products) {
-			if(p.getDesc().toLowerCase().contains(descText.toLowerCase())){
+			//if the search query is included in the description
+			//the product is added to the result list
+			if(p.getDesc().contains(descText)){
 				result.add(p);
 			}
 		}
@@ -75,15 +77,14 @@ public class SupplierPortImpl implements SupplierPortType {
 	public String buyProduct(String productId, int quantity)
 			throws BadProductId_Exception, BadQuantity_Exception, InsufficientQuantity_Exception {
 		
-		// check product id
-		if (productId == null)
-			throwBadProductId("Product identifier cannot be null!");
-		productId = productId.trim();
-		if (productId.length() == 0)
-			throwBadProductId("Product identifier cannot be empty or whitespace!");
-		
 		if (quantity <= 0) {
-			throwBadQuantity("Quantity must be higher than 0");
+			throwBadQuantity("Quantity must be higher than 0!");
+		}
+		
+		//getProduct checks the argument validity
+		//if it returns null, the product does not exist
+		if (getProduct(productId) == null) {
+			throwBadProductId("Product does not exist!");
 		}
 		
 		Supplier supplier = Supplier.getInstance();
@@ -92,7 +93,7 @@ public class SupplierPortImpl implements SupplierPortType {
 			return supplier.buyProduct(productId, quantity);	
 		}
 		catch (QuantityException qe) {
-			throwInsufficientQuantity("Cannot buy that many products");
+			throwInsufficientQuantity("Cannot buy that many products!");
 		}
 		
 		return null;

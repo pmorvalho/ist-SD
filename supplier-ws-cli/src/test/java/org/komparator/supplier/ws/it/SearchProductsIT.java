@@ -46,7 +46,7 @@ public class SearchProductsIT extends BaseIT {
 		{
 			ProductView product = new ProductView();
 			product.setId("Z3");
-			product.setDesc("Soccer ball");
+			product.setDesc("Soccer Ball");
 			product.setPrice(30);
 			product.setQuantity(30);
 			client.createProduct(product);
@@ -68,12 +68,6 @@ public class SearchProductsIT extends BaseIT {
 	@After
 	public void tearDown() {
 	}
-
-	// tests
-	// assertEquals(expected, actual);
-
-	// public List<ProductView> searchProducts(String descText) throws
-	// BadText_Exception
 
 	// bad input tests
 
@@ -105,9 +99,15 @@ public class SearchProductsIT extends BaseIT {
 	// main tests
 
 	@Test
-	public void searchProductThreeResultsTest() throws BadText_Exception {
+	public void searchProductLowerCaseResultsTest() throws BadText_Exception {
 		List<ProductView> result = client.searchProducts("ball");
-		assertEquals(result.size(), 3);
+		assertEquals(result.size(), 2);
+	}
+
+	@Test
+	public void searchProductUpperCaseResultsTest() throws BadText_Exception {
+		List<ProductView> result = client.searchProducts("Ball");
+		assertEquals(result.size(), 1);
 	}
 	
 	@Test
