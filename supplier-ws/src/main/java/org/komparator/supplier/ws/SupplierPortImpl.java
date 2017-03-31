@@ -77,14 +77,14 @@ public class SupplierPortImpl implements SupplierPortType {
 	public String buyProduct(String productId, int quantity)
 			throws BadProductId_Exception, BadQuantity_Exception, InsufficientQuantity_Exception {
 		
-		if (quantity <= 0) {
-			throwBadQuantity("Quantity must be higher than 0!");
-		}
-		
 		//getProduct checks the argument validity
 		//if it returns null, the product does not exist
 		if (getProduct(productId) == null) {
 			throwBadProductId("Product does not exist!");
+		}
+		
+		if (quantity <= 0) {
+			throwBadQuantity("Quantity must be higher than 0!");
 		}
 		
 		Supplier supplier = Supplier.getInstance();
