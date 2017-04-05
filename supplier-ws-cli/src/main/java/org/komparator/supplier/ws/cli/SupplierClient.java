@@ -17,6 +17,9 @@ import org.komparator.supplier.ws.PurchaseView;
 import org.komparator.supplier.ws.SupplierPortType;
 import org.komparator.supplier.ws.SupplierService;
 
+import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINaming;
+import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINamingException;
+
 /**
  * Client port wrapper.
  *
@@ -33,6 +36,10 @@ public class SupplierClient implements SupplierPortType {
 
 	/** WS end point address */
 	private String wsURL = null; // default value is defined inside WSDL
+	
+	private String uddiURL = null;
+	
+	private String wsName = null;
 
 	public String getWsURL() {
 		return wsURL;
@@ -40,6 +47,8 @@ public class SupplierClient implements SupplierPortType {
 
 	/** output option **/
 	private boolean verbose = false;
+	
+	
 
 	public boolean isVerbose() {
 		return verbose;
@@ -53,6 +62,46 @@ public class SupplierClient implements SupplierPortType {
 	public SupplierClient(String wsURL) throws SupplierClientException {
 		this.wsURL = wsURL;
 		createStub();
+	}
+	/** constructor with provided UDDI url and WebService name in UDDI */
+	public SupplierClient(String uddiURL, String wsName){
+		if (uddiURL == null)
+			throw new NullPointerException("UDDI Address cannot be null!");
+		this.uddiURL = uddiURL;
+		
+		if (wsName == null)
+			throw new NullPointerException("Web Service Name cannot be null!");
+		this.wsName = wsName;
+		
+		UDDINaming uddiNaming;
+		
+		System.out.printf("Contacting UDDI at %s%n", uddiURL);
+		try{
+			uddiNaming = new UDDINaming(uddiURL);
+		}
+		catch(UDDINamingException e){
+			System.out.println("Could not find UDDI Server");
+			return;
+		}
+		
+		System.out.printf("Looking for '%s'%n", wsName);
+		String endpointAddress;
+		try{
+			endpointAddress = uddiNaming.lookup(wsName);
+		}
+		catch(UDDINamingException e){
+			System.out.printf("Could not find service %s%n", wsName);
+			return;
+		}
+		if (endpointAddress == null) {
+			System.out.println("Not found!");
+			return;
+		} else {
+			System.out.printf("Found %s%n", endpointAddress);
+		}
+		
+		createStub();
+		
 	}
 
 	/** Stub creation and configuration */

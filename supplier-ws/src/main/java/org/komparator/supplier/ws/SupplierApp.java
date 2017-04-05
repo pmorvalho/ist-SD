@@ -12,9 +12,11 @@ public class SupplierApp {
 			return;
 		}
 		String wsURL = args[0];
+		String uddiURL = args[1];
+		String wsName = args[2];
 
 		// Create server implementation object
-		SupplierEndpointManager endpoint = new SupplierEndpointManager(wsURL);
+		SupplierEndpointManager endpoint = new SupplierEndpointManager(wsURL,uddiURL,wsName);
 		try {
 			endpoint.start();
 			endpoint.awaitConnections();
