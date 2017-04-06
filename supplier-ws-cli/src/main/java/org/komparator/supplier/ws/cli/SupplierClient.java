@@ -103,6 +103,14 @@ public class SupplierClient implements SupplierPortType {
 		createStub();
 		
 	}
+	
+	public void setWsName(String wsName){
+		this.wsName=wsName;
+	}
+	
+	public String getWsName(){
+		return wsName;
+	}
 
 	/** Stub creation and configuration */
 	private void createStub() {
