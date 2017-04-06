@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.jws.WebService;
 
+import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.ProductView;
 import org.komparator.supplier.ws.cli.SupplierClient;
 import org.komparator.supplier.ws.cli.SupplierClientException;
@@ -37,18 +38,25 @@ public class MediatorPortImpl implements MediatorPortType{
 	@Override
 	public List<ItemView> getItems(String productId) throws InvalidItemId_Exception {
 		
-		Collection<UDDIRecord> suppliers=getSuppliers();
-    	List<SupplierClient> supClientList = getSupplierClients(suppliers);
+		List<SupplierClient> supClientList = getSupplierClients(getSuppliers());
+		
+		System.out.println("FOUND THIS NUMBER OF SUPPLIERS : " + supClientList.size());
     	
     	List<ItemView> itemList = new ArrayList<ItemView>();
     	for(SupplierClient client : supClientList){
     		try{
-    			itemList.add(createItemView(client.getProduct(productId), client));
+    			ProductView prod = client.getProduct(productId);
+    			if (prod == null)
+    				continue;
+    			itemList.add(createItemView(prod, client));
     		}
-    		catch(Exception e){
-    			throwInvalidItemId("Item ID is incorrect, failed.");
-    			return null;
+    		catch(BadProductId_Exception e){
+    			throwInvalidItemId("Invalid item ID, failed.");
     		}
+    	}
+    	
+    	if(itemList.isEmpty()){
+    		throwInvalidItemId("Product does not exist in any Supplier.");
     	}
     	
     	Collections.sort(itemList,new ItemPriceComparator() );
