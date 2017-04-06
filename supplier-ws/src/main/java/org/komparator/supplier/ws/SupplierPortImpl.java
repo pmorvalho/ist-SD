@@ -147,6 +147,7 @@ public class SupplierPortImpl implements SupplierPortType {
 		// create new product
 		Supplier s = Supplier.getInstance();
 		s.registerProduct(productId, productDesc, quantity, price);
+		System.out.println("CREATED NEW PRODUCT : "+ productId);
 	}
 	
 	@Override
