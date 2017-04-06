@@ -9,6 +9,7 @@ import java.util.List;
 import javax.jws.WebService;
 
 import org.komparator.supplier.ws.ProductView;
+import org.komparator.supplier.ws.PurchaseView;
 import org.komparator.supplier.ws.cli.SupplierClient;
 import org.komparator.supplier.ws.cli.SupplierClientException;
 
@@ -27,6 +28,9 @@ public class MediatorPortImpl implements MediatorPortType{
 
 	// end point manager
 	private MediatorEndpointManager endpointManager;
+	
+	//shop list
+	private ArrayList<ShoppingResultView> shoppingResults = new ArrayList<ShoppingResultView>();
 
 	public MediatorPortImpl(MediatorEndpointManager endpointManager) {
 		this.endpointManager = endpointManager;
@@ -139,8 +143,7 @@ public class MediatorPortImpl implements MediatorPortType{
 
 	@Override
 	public List<ShoppingResultView> shopHistory() {
-		// TODO Auto-generated method stub
-		return null;
+		return shoppingResults;
 	}
 
 	
@@ -167,7 +170,14 @@ public class MediatorPortImpl implements MediatorPortType{
 		return item;
 		
 	}
-    // TODO
+    
+	public ShoppingResultView createShoppingResultView(String id, Result res, int price) {
+		ShoppingResultView view = new ShoppingResultView();
+		view.setId(id);
+		view.setResult(res);
+		view.setTotalPrice(price);
+		return view;
+	}
 
     
 	// Exception helpers -----------------------------------------------------
