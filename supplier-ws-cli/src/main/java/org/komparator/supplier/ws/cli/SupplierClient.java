@@ -45,6 +45,10 @@ public class SupplierClient implements SupplierPortType {
 		return wsURL;
 	}
 
+	public String getWsName() {
+		return wsName;
+	}
+	
 	/** output option **/
 	private boolean verbose = false;
 	
