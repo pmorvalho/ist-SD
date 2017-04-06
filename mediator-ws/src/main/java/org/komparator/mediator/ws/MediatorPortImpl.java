@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.jws.WebService;
 
+import org.komparator.supplier.ws.BadText_Exception;
 import org.komparator.supplier.ws.ProductView;
 import org.komparator.supplier.ws.PurchaseView;
 import org.komparator.supplier.ws.cli.SupplierClient;
@@ -61,10 +62,22 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	@Override
 	public List<ItemView> searchItems(String descText) throws InvalidText_Exception {
-		// TODO Auto-generated method stub
-		return null;
+		List<ItemView> itemList = new ArrayList<ItemView>();
+		
+		for (SupplierClient supC : getSupplierClients(getSuppliers())) {
+			try {
+				for(ProductView prod : supC.searchProducts(descText)) {
+					itemList.add(createItemView(prod, supC));
+				}
+			} catch (BadText_Exception e) {
+				throwInvalidText("Invalid description");
+			}
+		}
+		
+		Collections.sort(itemList,new ItemNameComparator() );
+		return itemList;
 	}
-	
+
 	@Override
 	public void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
 			InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
@@ -157,6 +170,24 @@ public class MediatorPortImpl implements MediatorPortType{
 	    }
 	}
 	
+	class ItemNameComparator implements Comparator<ItemView> {
+	    @Override
+	    public int compare(ItemView a, ItemView b) {
+
+	    	String s1 = a.getItemId().getProductId();
+	    	String s2 = b.getItemId().getProductId();
+	    	int sComp = s1.compareTo(s2);
+
+	    	if (sComp != 0) {
+	    		return sComp;
+	    	} else {
+	    		Integer i1 = new Integer(a.getPrice());
+	    		Integer i2 = new Integer(b.getPrice());
+	    		return i1.compareTo(i2);
+	    	}
+	    }
+	}
+	
 	public ItemView createItemView(ProductView product, SupplierClient client ){
 		ItemView item = new ItemView();
 		
@@ -179,13 +210,18 @@ public class MediatorPortImpl implements MediatorPortType{
 		return view;
 	}
 
-    
+
 	// Exception helpers -----------------------------------------------------
 	private void throwInvalidItemId(final String message) throws InvalidItemId_Exception {
 		InvalidItemId faultInfo = new InvalidItemId();
 		faultInfo.message = message;
 		throw new InvalidItemId_Exception(message, faultInfo);
 	}
-    // TODO
+
+	private void throwInvalidText(final String message) throws InvalidText_Exception{
+		InvalidText faultInfo = new InvalidText();
+		faultInfo.message = message;
+		throw new InvalidText_Exception(message, faultInfo);
+	}
 
 }
