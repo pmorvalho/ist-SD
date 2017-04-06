@@ -92,32 +92,32 @@ public class MediatorPortImpl implements MediatorPortType{
 	public void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
 	InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {		
 		
-		if( cartId==null || cartId.trim().equals("") ) throw new InvalidCartId_Exception(cartId, null);
+		if( cartId==null || cartId.trim().equals("") ) throwInvalidCartId("Cart ID is incorrect, failed.");
 				
-		if(itemId == null || itemId.getProductId().trim().equals("") || getItems(itemId.getProductId())==null)  throw new InvalidItemId_Exception(itemId.getProductId(), null);
+		if(itemId == null || itemId.getProductId().trim().equals("") || getItems(itemId.getProductId())==null)  throwInvalidItemId("Item ID is incorrect, failed.");
 		
-		if( itemQty < 0 ) throw new InvalidQuantity_Exception(cartId, null);
+		if( itemQty < 0 ) throwInvalidQuantity("Quantity is invalid, failed.");
 
 		int supQuantity=0;
 		try {
 			ProductView product = getSupplierClient(itemId.getSupplierId()).getProduct(itemId.getProductId());
 			supQuantity = product.getQuantity();
 		} catch (BadProductId_Exception e) {
-			throw new InvalidItemId_Exception(itemId.getProductId(), null);
+			throwInvalidItemId("Item ID is incorrect, failed.");
 		}
 		
-		if( supQuantity < itemQty) throw new NotEnoughItems_Exception(cartId, null);
+		if( supQuantity < itemQty) throwNotEnoughItems("Not enough items, failed.");
 
 		
 		for(CartView c : carts){
 			
-			if(c.getCartId()==cartId){
+			if(c.getCartId().equals(cartId)){
 				
 				for(CartItemView civ : c.getItems()){
 					
-					if(civ.getItem().getItemId()==itemId){
+					if(civ.getItem().getItemId().equals(itemId)){
 						int qty = civ.getQuantity() + itemQty;
-						if(qty > supQuantity) throw new NotEnoughItems_Exception(cartId, null);
+						if(qty > supQuantity) throwNotEnoughItems("Not enough items, failed.");
 						civ.setQuantity(qty);
 						return;
 					}
@@ -128,7 +128,7 @@ public class MediatorPortImpl implements MediatorPortType{
 			}
 		}
 		
-		if(itemQty > supQuantity) throw new NotEnoughItems_Exception(cartId, null);
+		if(itemQty > supQuantity) throwNotEnoughItems("Not enough items, failed.");
 		
 		carts.add(createCartView(cartId, itemId, itemQty));
 
@@ -177,7 +177,7 @@ public class MediatorPortImpl implements MediatorPortType{
 
 	public SupplierClient getSupplierClient(String supplier){
 		for(SupplierClient sc : getSupplierClients(getSuppliers())){
-			if(sc.getWsName()==supplier){
+			if(sc.getWsName().equals(supplier)){
 				return sc;
 			}
 		}
@@ -305,5 +305,25 @@ public class MediatorPortImpl implements MediatorPortType{
 		faultInfo.message = message;
 		throw new InvalidText_Exception(message, faultInfo);
 	}
+	
+	private void throwInvalidCartId(final String message) throws InvalidCartId_Exception{
+		InvalidCartId faultInfo = new InvalidCartId();
+		faultInfo.message = message;
+		throw new InvalidCartId_Exception(message, faultInfo);
+	}
+	
+	private void throwNotEnoughItems(final String message) throws NotEnoughItems_Exception{
+		NotEnoughItems faultInfo = new NotEnoughItems();
+		faultInfo.message = message;
+		throw new NotEnoughItems_Exception(message, faultInfo);
+	}
 
+	private void throwInvalidQuantity(final String message) throws InvalidQuantity_Exception{
+		InvalidQuantity faultInfo = new InvalidQuantity();
+		faultInfo.message = message;
+		throw new InvalidQuantity_Exception(message, faultInfo);
+	}
+	
+	
+	
 }
