@@ -32,7 +32,7 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	@Override
 	public List<ItemView> getItems(String productId) throws InvalidItemId_Exception {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 	
@@ -60,8 +60,8 @@ public class MediatorPortImpl implements MediatorPortType{
 	// Auxiliary operations --------------------------------------------------	
 	
 	
-    public String ping(String arg0){
-    	Collection<String> suppliers;
+	public Collection<String> getSuppliers(){
+		Collection<String> suppliers;
     	//É para fazer try catch ou throws? !!!!!!!!!!!!!!!!!!! TODO
     	try{
     		suppliers = endpointManager.getUddiNaming().list("A68_Supplier%");
@@ -70,7 +70,10 @@ public class MediatorPortImpl implements MediatorPortType{
     		System.out.println("Could not list suppliers");
     		return null;
     	}
-    	
+    	return suppliers;
+	} 
+	
+	public List<SupplierClient> getSupplierClients(Collection<String> suppliers){
     	List<SupplierClient> supClientList = new ArrayList<SupplierClient>();
     	for(String url : suppliers){
     		try{
@@ -80,7 +83,15 @@ public class MediatorPortImpl implements MediatorPortType{
     			System.out.println("");
     		}
     	}
+    	return supClientList;
     	
+	}
+	
+	
+    public String ping(String arg0){
+    	
+    	Collection<String> suppliers=getSuppliers();
+    	List<SupplierClient> supClientList = getSupplierClients(suppliers);
     	String result = "";
     	int i = 0;
     	for(SupplierClient client : supClientList){
