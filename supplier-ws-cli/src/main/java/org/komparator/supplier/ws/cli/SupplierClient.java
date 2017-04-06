@@ -45,6 +45,10 @@ public class SupplierClient implements SupplierPortType {
 		return wsURL;
 	}
 
+	public String getWsName() {
+		return wsName;
+	}
+	
 	/** output option **/
 	private boolean verbose = false;
 	
@@ -102,6 +106,14 @@ public class SupplierClient implements SupplierPortType {
 		
 		createStub();
 		
+	}
+	
+	public void setWsName(String wsName){
+		this.wsName=wsName;
+	}
+	
+	public String getWsName(){
+		return wsName;
 	}
 
 	/** Stub creation and configuration */
