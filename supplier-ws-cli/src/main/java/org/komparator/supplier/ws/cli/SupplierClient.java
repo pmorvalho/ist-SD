@@ -46,7 +46,7 @@ public class SupplierClient implements SupplierPortType {
 	}
 
 	/** output option **/
-	private boolean verbose = false;
+	private boolean verbose = true;
 	
 	
 
@@ -64,7 +64,7 @@ public class SupplierClient implements SupplierPortType {
 		createStub();
 	}
 	/** constructor with provided UDDI url and WebService name in UDDI */
-	public SupplierClient(String uddiURL, String wsName){
+	public SupplierClient(String uddiURL, String wsName) throws SupplierClientException{
 		if (uddiURL == null)
 			throw new NullPointerException("UDDI Address cannot be null!");
 		this.uddiURL = uddiURL;
@@ -73,36 +73,60 @@ public class SupplierClient implements SupplierPortType {
 			throw new NullPointerException("Web Service Name cannot be null!");
 		this.wsName = wsName;
 		
-		UDDINaming uddiNaming;
-		
-		System.out.printf("Contacting UDDI at %s%n", uddiURL);
-		try{
-			uddiNaming = new UDDINaming(uddiURL);
-		}
-		catch(UDDINamingException e){
-			System.out.println("Could not find UDDI Server");
-			return;
-		}
-		
-		System.out.printf("Looking for '%s'%n", wsName);
-		String endpointAddress;
-		try{
-			endpointAddress = uddiNaming.lookup(wsName);
-		}
-		catch(UDDINamingException e){
-			System.out.printf("Could not find service %s%n", wsName);
-			return;
-		}
-		if (endpointAddress == null) {
-			System.out.println("Not found!");
-			return;
-		} else {
-			System.out.printf("Found %s%n", endpointAddress);
-		}
-		
+//		UDDINaming uddiNaming;
+//		
+//		System.out.printf("Contacting UDDI at %s%n", uddiURL);
+//		try{
+//			uddiNaming = new UDDINaming(uddiURL);
+//		}
+//		catch(UDDINamingException e){
+//			System.out.println("Could not find UDDI Server");
+//			return;
+//		}
+//		
+//		System.out.printf("Looking for '%s'%n", wsName);
+//		try{
+//			wsURL = uddiNaming.lookup(wsName);
+//		}
+//		catch(UDDINamingException e){
+//			System.out.printf("Could not find service %s%n", wsName);
+//			return;
+//		}
+//		if (wsURL == null) {
+//			System.out.println("Not found!");
+//			return;
+//		} else {
+//			System.out.printf("Found %s%n", wsURL);
+//		}
+//		
+		uddiLookup();
 		createStub();
 		
 	}
+	
+	private void uddiLookup() throws SupplierClientException {
+        try {
+            if (verbose)
+                System.out.printf("Contacting UDDI at %s%n", uddiURL);
+            UDDINaming uddiNaming = new UDDINaming(uddiURL);
+
+            if (verbose)
+                System.out.printf("Looking for '%s'%n", wsName);
+            wsURL = uddiNaming.lookup(wsName);
+
+        } catch (Exception e) {
+            String msg = String.format("Client failed lookup on UDDI at %s!",
+                    uddiURL);
+            throw new SupplierClientException(msg, e);
+        }
+
+        if (wsURL == null) {
+            String msg = String.format(
+                    "Service with name %s not found on UDDI at %s", wsName,
+                    uddiURL);
+            throw new SupplierClientException(msg);
+        }
+    }
 	
 	public void setWsName(String wsName){
 		this.wsName=wsName;
