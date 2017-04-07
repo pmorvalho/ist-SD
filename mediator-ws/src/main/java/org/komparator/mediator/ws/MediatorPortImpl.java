@@ -167,13 +167,13 @@ public class MediatorPortImpl implements MediatorPortType{
 		
 		CreditCardClient ccClient = getCreditCardClient(getCreditCard());
 		if(!ccClient.validateNumber(creditCardNr)){
-			throwInvalidCreditCard("Invalid Credit Card, could not validate number");
+			throwInvalidCreditCard("Invalid Credit Card, could not validate number, failed");
 		}
 		
 		if( cartId==null || cartId.trim().equals("") ) throwInvalidCartId("Cart ID is incorrect, failed.");
 		//Still have to add price, result and define purchased and dropped items, since we don't know them yet
 		//Set ID
-		ShoppingResultView shoppingResult = createShoppingResultView("Cart"+NumberOfBoughtCarts,null,0);
+		ShoppingResultView shoppingResult = createShoppingResultView("CartResult"+NumberOfBoughtCarts,null,0);
 		List<CartItemView> allItems = new ArrayList<CartItemView>();
 		int totalprice=0;
 		
@@ -222,6 +222,9 @@ public class MediatorPortImpl implements MediatorPortType{
 				}
 
 			}
+			else{
+				throwInvalidCartId("Could not find this cart, failed");
+			}
 		}
 		//set dropped items
 		for(CartItemView civ : allItems){
@@ -250,28 +253,27 @@ public class MediatorPortImpl implements MediatorPortType{
     
 	// Auxiliary operations --------------------------------------------------	
 	
-	public UDDIRecord getCreditCard(){
-		Collection<UDDIRecord> cc;
+	public String getCreditCard(){
+		String cc;
     	//É para fazer try catch ou throws? !!!!!!!!!!!!!!!!!!! TODO
     	try{
-    		cc = endpointManager.getUddiNaming().listRecords("CreditCard");
+    		cc = endpointManager.getUddiNaming().lookup("CreditCard");
     	}
     	catch(UDDINamingException e){
     		System.out.println("Could not find Credit Card");
     		return null;
     	}
     	
-    	if(cc.size()!=1){
-    		System.out.println("Found more than one Credit Card");
-    	}
-    	return cc.iterator().next();
+    	
+    	
+    	
+    	return cc;
 	} 
 	
-	public CreditCardClient getCreditCardClient(UDDIRecord record){
+	public CreditCardClient getCreditCardClient(String record){
     	CreditCardClient client;
     	try{
-    		client = new CreditCardClient(record.getUrl());
-    		client.setWsName(record.getOrgName());
+    		client = new CreditCardClient(record);
     	}
     	catch(CreditCardClientException e){
     		System.out.println("could not create credit card client");
