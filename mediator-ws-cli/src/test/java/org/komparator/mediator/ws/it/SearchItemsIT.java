@@ -70,6 +70,7 @@ public class SearchItemsIT extends BaseIT {
 		}
 	}
 	
+	// TODO input tests
 	
     @Test
     public void success() throws InvalidText_Exception {
@@ -78,5 +79,30 @@ public class SearchItemsIT extends BaseIT {
     	assertEquals("X1", items.get(0).getItemId().getProductId());
     	assertEquals("Y1", items.get(1).getItemId().getProductId());
     	assertEquals("Z1", items.get(2).getItemId().getProductId());
+    }
+    
+    @Test
+    public void sameIdDiffPrice() throws InvalidText_Exception, BadProductId_Exception, BadProduct_Exception {
+    	ProductView product = new ProductView();
+		product.setId("X1");
+		product.setDesc("Football");
+		product.setPrice(5);
+		product.setQuantity(10);
+		supplierClients.get(1).createProduct(product);
+    	
+    	List<ItemView> items = mediatorClient.searchItems("ball");
+    	assertEquals(4,items.size());
+    	assertEquals("X1", items.get(0).getItemId().getProductId());
+    	assertEquals("A68_Supplier2", items.get(0).getItemId().getSupplierId());
+    	assertEquals("X1", items.get(1).getItemId().getProductId());
+    	assertEquals("A68_Supplier1", items.get(1).getItemId().getSupplierId());
+    	assertEquals("Y1", items.get(2).getItemId().getProductId());
+    	assertEquals("Z1", items.get(3).getItemId().getProductId());
+    }
+    
+    @Test
+    public void noProductsMatch() throws InvalidText_Exception {
+    	List<ItemView> items = mediatorClient.searchItems("sdfg");
+    	assertEquals(0,items.size());
     }
 }
