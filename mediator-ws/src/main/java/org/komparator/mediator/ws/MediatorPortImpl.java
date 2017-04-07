@@ -169,6 +169,7 @@ public class MediatorPortImpl implements MediatorPortType{
 		if( cartId==null || cartId.trim().equals("") ) throwInvalidCartId("Cart ID is incorrect, failed.");
 		//Still have to add price, result and define purchased and dropped items, since we don't know them yet
 		//Set ID
+		NumberOfBoughtCarts++;
 		ShoppingResultView shoppingResult = createShoppingResultView("CartResult"+NumberOfBoughtCarts,null,0);
 		List<CartItemView> allItems = new ArrayList<CartItemView>();
 		int totalprice=0;
@@ -215,7 +216,9 @@ public class MediatorPortImpl implements MediatorPortType{
 					//Set purchased items
 					shoppingResult.getPurchasedItems().add(civ);
 					totalprice+= civ.getItem().getPrice();
+				
 				}
+				carts.remove(c);
 
 			}
 			else{
@@ -241,7 +244,8 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 		//Set price
 		shoppingResult.setTotalPrice(totalprice);
-		
+		//Shopping result finished
+		shoppingResults.add(shoppingResult);
 		return shoppingResult;
 
 	}
