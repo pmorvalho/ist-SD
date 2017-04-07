@@ -71,6 +71,7 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	@Override
 	public List<ItemView> searchItems(String descText) throws InvalidText_Exception {
+		//TODO testar input
 		List<ItemView> itemList = new ArrayList<ItemView>();
 		
 		for (SupplierClient supC : getSupplierClients(getSuppliers())) {
