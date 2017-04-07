@@ -1,7 +1,7 @@
 package org.komparator.mediator.ws.it;
 
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.After;
 import org.junit.Before;
@@ -189,7 +189,7 @@ public class BuyCartIT extends BaseIT {
 	}
 	
 	
-	
+	//TESTAR HISTORYYYYYYYYYYYYYYYYYYYY TODO
     @Test
     public void complete() throws InvalidItemId_Exception, EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
     	ShoppingResultView shoppingResult = mediatorClient.buyCart("Cart1","4024007102923926");
@@ -198,7 +198,7 @@ public class BuyCartIT extends BaseIT {
     	assertEquals(3,shoppingResult.getPurchasedItems().size());
     	assertEquals(0,shoppingResult.getDroppedItems().size());
     	assertEquals(60,shoppingResult.getTotalPrice());
-    	assertEquals(2,mediatorClient.listCarts().size());
+    	assertEquals(1,mediatorClient.shopHistory().size());
     }
     
     @Test
@@ -209,7 +209,7 @@ public class BuyCartIT extends BaseIT {
     	assertEquals(3,shoppingResult.getPurchasedItems().size());
     	assertEquals(0,shoppingResult.getDroppedItems().size());
     	assertEquals(1300,shoppingResult.getTotalPrice());
-    	assertEquals(2,mediatorClient.listCarts().size());
+    	assertEquals(1,mediatorClient.shopHistory().size());
     }
     
     @Test
@@ -221,7 +221,7 @@ public class BuyCartIT extends BaseIT {
     	assertEquals(2,shoppingResult.getPurchasedItems().size());
     	assertEquals(1,shoppingResult.getDroppedItems().size());
     	assertEquals(40,shoppingResult.getTotalPrice());
-    	assertEquals(1,mediatorClient.listCarts().size());
+    	assertEquals(2,mediatorClient.shopHistory().size());
     }
     
     @Test
@@ -233,15 +233,29 @@ public class BuyCartIT extends BaseIT {
     	assertEquals(0,shoppingResult.getPurchasedItems().size());
     	assertEquals(3,shoppingResult.getDroppedItems().size());
     	assertEquals(0,shoppingResult.getTotalPrice());
-    	assertEquals(1,mediatorClient.listCarts().size());
+    	assertEquals(2,mediatorClient.shopHistory().size());
     }
     
-    @Test(expected=InvalidCartId_Exception.class)
+    @Test
     public void duplicate() throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception{
-    	mediatorClient.buyCart("Cart1","4024007102923926");
-    	mediatorClient.buyCart("Cart1","4024007102923926");
+    	ShoppingResultView shoppingResult_1 = mediatorClient.buyCart("Cart1","4024007102923926");
+    	ShoppingResultView shoppingResult_2 = mediatorClient.buyCart("Cart1","4024007102923926");
+    	
+    	assertEquals("CartResult1",shoppingResult_1.getId());
+    	assertEquals(Result.COMPLETE,shoppingResult_1.getResult());
+    	assertEquals(3,shoppingResult_1.getPurchasedItems().size());
+    	assertEquals(0,shoppingResult_1.getDroppedItems().size());
+    	assertEquals(60,shoppingResult_1.getTotalPrice());
+    	
+    	assertEquals("CartResult2",shoppingResult_2.getId());
+    	assertEquals(Result.COMPLETE,shoppingResult_2.getResult());
+    	assertEquals(3,shoppingResult_2.getPurchasedItems().size());
+    	assertEquals(0,shoppingResult_2.getDroppedItems().size());
+    	assertEquals(60,shoppingResult_2.getTotalPrice());
+    	
+    	assertEquals(2,mediatorClient.shopHistory().size());
+    	
     }
-    
     @After
     public void deleteCarts(){
     	mediatorClient.clear();
