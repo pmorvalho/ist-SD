@@ -270,6 +270,36 @@ public class AddToCartIT extends BaseIT {
     	mediatorClient.addToCart("Cart2", null, 4);
     }
     
+    @Test(expected = InvalidCartId_Exception.class)
+    public void nonAlphaNumericCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X2");
+		item.setSupplierId(supplierClients.get(1).getWsName());
+		
+    	mediatorClient.addToCart("I_D", item, 4);
+    }
+    
+    @Test
+    public void alphaNumericCartId2() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X2");
+		item.setSupplierId(supplierClients.get(1).getWsName());
+		
+    	mediatorClient.addToCart("aB2", item, 4);
+    }
+    
+    @Test(expected = InvalidCartId_Exception.class)
+    public void alphaNumericSpacesCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X2");
+		item.setSupplierId(supplierClients.get(1).getWsName());
+		
+    	mediatorClient.addToCart("I D", item, 4);
+    }
+    
 //    Exceptions tests
     
     @Test(expected = NotEnoughItems_Exception.class)

@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.jws.WebService;
 
@@ -55,6 +57,8 @@ public class MediatorPortImpl implements MediatorPortType{
 		productId = productId.trim();
 		if (productId.length() == 0)
 			throwInvalidItemId("Product identifier cannot be empty or whitespace!");
+		if (!checkId(productId))
+			throwInvalidItemId("Product identifier must be alphanumeric without spaces!");
 		
 		List<SupplierClient> supClientList = getSupplierClients(getSuppliers());
 		
@@ -105,9 +109,9 @@ public class MediatorPortImpl implements MediatorPortType{
 	public void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
 	InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {		
 		
-		if( cartId == null || cartId.trim().equals("") ) throwInvalidCartId("Cart ID is incorrect, failed.");
+		if( cartId == null || !checkId(cartId.trim()) ) throwInvalidCartId("Cart ID is incorrect, failed.");
 				
-		if( itemId == null || itemId.getProductId().trim().equals("")|| getItems(itemId.getProductId()).isEmpty())  throwInvalidItemId("Item ID is incorrect, failed.");
+		if( itemId == null || !checkId(itemId.getProductId().trim()) || getItems(itemId.getProductId()).isEmpty())  throwInvalidItemId("Item ID is incorrect, failed.");
 		
 		if( itemQty <= 0 ) throwInvalidQuantity("Quantity is invalid, failed.");
 
@@ -163,12 +167,12 @@ public class MediatorPortImpl implements MediatorPortType{
 	public ShoppingResultView buyCart(String cartId, String creditCardNr)
 			throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
 		
+		if( cartId==null || !checkId(cartId.trim()) ) throwInvalidCartId("Cart ID is incorrect, failed.");
+		
 		CreditCardClient ccClient = getCreditCardClient(getCreditCard());
 		if(!ccClient.validateNumber(creditCardNr)){
 			throwInvalidCreditCard("Invalid Credit Card, could not validate number, failed");
 		}
-		
-		if( cartId==null || cartId.trim().equals("") ) throwInvalidCartId("Cart ID is incorrect, failed.");
 		//Still have to add price, result and define purchased and dropped items, since we don't know them yet
 		//Set ID
 		NumberOfBoughtCarts++;
@@ -392,6 +396,13 @@ public class MediatorPortImpl implements MediatorPortType{
 	    		return i1.compareTo(i2);
 	    	}
 	    }
+	}
+	
+	// Checks if id is an alphanumeric string without spaces
+	public boolean checkId(String id) {
+		Pattern p = Pattern.compile("[a-zA-Z0-9]+");
+		Matcher m = p.matcher(id);
+		return m.matches();
 	}
 	
 	// View helpers -----------------------------------------------------

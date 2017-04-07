@@ -5,16 +5,12 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.komparator.mediator.ws.InvalidText_Exception;
 import org.komparator.mediator.ws.ItemView;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.BadProduct_Exception;
-import org.komparator.supplier.ws.BadQuantity_Exception;
-import org.komparator.supplier.ws.BadText_Exception;
-import org.komparator.supplier.ws.InsufficientQuantity_Exception;
 import org.komparator.supplier.ws.ProductView;
 
 
@@ -62,27 +58,27 @@ public class SearchItemsIT extends BaseIT {
     // Bad input tests
 
  	@Test(expected = InvalidText_Exception.class)
- 	public void searchProductNullDescTest() throws InvalidText_Exception {
+ 	public void nullDescTest() throws InvalidText_Exception {
  		mediatorClient.searchItems(null);
  	}
  	
  	@Test(expected = InvalidText_Exception.class)
- 	public void searchProductWhitespaceDescTest() throws InvalidText_Exception {
+ 	public void whitespaceDescTest() throws InvalidText_Exception {
  		mediatorClient.searchItems(" ");
  	}
  	
  	@Test(expected = InvalidText_Exception.class)
- 	public void searchProductEmptyDescTest() throws InvalidText_Exception {
+ 	public void emptyDescTest() throws InvalidText_Exception {
  		mediatorClient.searchItems("");
  	}
  	
  	@Test(expected = InvalidText_Exception.class)
- 	public void searchProductNewLineDescTest() throws InvalidText_Exception {
+ 	public void newLineDescTest() throws InvalidText_Exception {
  		mediatorClient.searchItems("\n");
  	}
 
  	@Test(expected = InvalidText_Exception.class)
- 	public void searchProductTabDescTest() throws InvalidText_Exception {
+ 	public void tabDescTest() throws InvalidText_Exception {
  		mediatorClient.searchItems("\t");
  	}
 	

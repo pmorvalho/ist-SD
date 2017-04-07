@@ -146,7 +146,15 @@ public class BuyCartIT extends BaseIT {
 		mediatorClient.buyCart("Cart750","4024007102923926");
 	}
 	
+	@Test(expected=InvalidCartId_Exception.class)
+	public void nonAlphanumericCartID() throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
+		mediatorClient.buyCart("t_i_k","4024007102923926");
+	}
 	
+	@Test(expected=InvalidCartId_Exception.class)
+	public void alphanumericSpacesCartID() throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
+		mediatorClient.buyCart("t i k","4024007102923926");
+	}
 	
 	
 	
