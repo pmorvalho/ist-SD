@@ -84,7 +84,6 @@ public class BuyCartIT extends BaseIT {
 			mediatorClient.addToCart("Cart1",id, 1);
 		}
 		
-		
 		{
 			ItemIdView id = new ItemIdView();
 			id.setProductId("X1");

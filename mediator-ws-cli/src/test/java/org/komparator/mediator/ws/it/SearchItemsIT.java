@@ -2,9 +2,7 @@ package org.komparator.mediator.ws.it;
 
 
 import static org.junit.Assert.*;
-
 import java.util.List;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.komparator.mediator.ws.InvalidText_Exception;
