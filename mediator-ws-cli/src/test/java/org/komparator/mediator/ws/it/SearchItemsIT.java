@@ -13,6 +13,7 @@ import org.komparator.mediator.ws.ItemView;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.BadProduct_Exception;
 import org.komparator.supplier.ws.BadQuantity_Exception;
+import org.komparator.supplier.ws.BadText_Exception;
 import org.komparator.supplier.ws.InsufficientQuantity_Exception;
 import org.komparator.supplier.ws.ProductView;
 
@@ -22,20 +23,8 @@ import org.komparator.supplier.ws.ProductView;
  */
 public class SearchItemsIT extends BaseIT {
 
-    // tests
-    // assertEquals(expected, actual);
-
-    // public String ping(String x)
-	
-	@BeforeClass
+    @BeforeClass
 	public static void oneTimeSetUp() throws BadProductId_Exception, BadProduct_Exception {
-		
-		
-		// clear remote service state before all tests
-
-		// fill-in test products
-		// (since getProduct is read-only the initialization below
-		// can be done once for all tests in this suite)
 		{
 			ProductView product = new ProductView();
 			product.setId("X1");
@@ -70,7 +59,34 @@ public class SearchItemsIT extends BaseIT {
 		}
 	}
 	
-	// TODO input tests
+    // Bad input tests
+
+ 	@Test(expected = InvalidText_Exception.class)
+ 	public void searchProductNullDescTest() throws InvalidText_Exception {
+ 		mediatorClient.searchItems(null);
+ 	}
+ 	
+ 	@Test(expected = InvalidText_Exception.class)
+ 	public void searchProductWhitespaceDescTest() throws InvalidText_Exception {
+ 		mediatorClient.searchItems(" ");
+ 	}
+ 	
+ 	@Test(expected = InvalidText_Exception.class)
+ 	public void searchProductEmptyDescTest() throws InvalidText_Exception {
+ 		mediatorClient.searchItems("");
+ 	}
+ 	
+ 	@Test(expected = InvalidText_Exception.class)
+ 	public void searchProductNewLineDescTest() throws InvalidText_Exception {
+ 		mediatorClient.searchItems("\n");
+ 	}
+
+ 	@Test(expected = InvalidText_Exception.class)
+ 	public void searchProductTabDescTest() throws InvalidText_Exception {
+ 		mediatorClient.searchItems("\t");
+ 	}
+	
+	//Main tests
 	
     @Test
     public void success() throws InvalidText_Exception {
@@ -79,6 +95,16 @@ public class SearchItemsIT extends BaseIT {
     	assertEquals("X1", items.get(0).getItemId().getProductId());
     	assertEquals("Y1", items.get(1).getItemId().getProductId());
     	assertEquals("Z1", items.get(2).getItemId().getProductId());
+    }
+    
+    @Test
+    public void alphabeticOrder() throws BadProductId_Exception, BadProduct_Exception, InvalidText_Exception{
+    	List<ItemView> items = mediatorClient.searchItems("e");
+    	assertEquals(4,items.size());
+    	assertEquals("W1", items.get(0).getItemId().getProductId());
+    	assertEquals("X1", items.get(1).getItemId().getProductId());
+    	assertEquals("Y1", items.get(2).getItemId().getProductId());
+    	assertEquals("Z1", items.get(3).getItemId().getProductId());
     }
     
     @Test

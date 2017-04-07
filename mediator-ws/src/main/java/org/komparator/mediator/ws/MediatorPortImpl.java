@@ -71,7 +71,13 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	@Override
 	public List<ItemView> searchItems(String descText) throws InvalidText_Exception {
-		//TODO testar input
+		// check input - description
+		if (descText == null)
+			throwInvalidText("Product description cannot be null!");
+		descText = descText.trim();
+		if (descText.length() == 0)
+			throwInvalidText("Product description cannot be empty or whitespace!");
+		
 		List<ItemView> itemList = new ArrayList<ItemView>();
 		
 		for (SupplierClient supC : getSupplierClients(getSuppliers())) {
@@ -80,6 +86,7 @@ public class MediatorPortImpl implements MediatorPortType{
 					itemList.add(createItemView(prod, supC));
 				}
 			} catch (BadText_Exception e) {
+				//Should not happen. Error handled before
 				throwInvalidText("Invalid description");
 			}
 		}
