@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.komparator.mediator.ws.CartView;
@@ -23,8 +25,8 @@ public class AddToCartIT extends BaseIT {
 
     // public String ping(String x)
 	
-	@BeforeClass
-	public static void oneTimeSetUp() throws BadProductId_Exception, BadProduct_Exception, InvalidCartId_Exception, InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+	@Before
+	public void oneTimeSetUp() throws BadProductId_Exception, BadProduct_Exception, InvalidCartId_Exception, InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
 		
 		// clear remote service state before all tests
@@ -95,6 +97,42 @@ public class AddToCartIT extends BaseIT {
     	assertEquals(items.get(2).getItems().get(0).getItem().getItemId().getProductId(), "X3"); 	
     }
     
+    @Test
+    public void successAddtoCart() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X2");
+		item.setSupplierId(supplierClients.get(1).getWsName());
+		
+    	mediatorClient.addToCart("Cart2", item, 4);
+
+    	mediatorClient.addToCart("Cart2", item, 10);
+    	
+    	List<CartView> items = mediatorClient.listCarts();
+    	System.out.println(items);
+    	assertEquals(1,items.size());
+    	assertEquals(items.get(0).getCartId(),"Cart2" );
+    	assertEquals(items.get(0).getItems().get(0).getQuantity(), 14);
+    	assertEquals(items.get(0).getItems().get(0).getItem().getItemId().getProductId(), "X2");	
+    }
+    
+    @Test(expected = NotEnoughItems_Exception.class)
+    public void addtoCartNotEnoughItems() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X2");
+		item.setSupplierId(supplierClients.get(1).getWsName());
+		
+    	mediatorClient.addToCart("Cart2", item, 4);
+
+    	mediatorClient.addToCart("Cart2", item, 12);
+    }
+    
+    
+    @After
+    public void deleteCarts(){
+    	mediatorClient.clear();
+    }
 
 
 }

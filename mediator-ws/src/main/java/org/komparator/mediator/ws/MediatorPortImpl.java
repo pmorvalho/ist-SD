@@ -49,6 +49,12 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	@Override
 	public List<ItemView> getItems(String productId) throws InvalidItemId_Exception {
+		// check input - description
+		if (productId == null)
+			throwInvalidItemId("Product identifier cannot be null!");
+		productId = productId.trim();
+		if (productId.length() == 0)
+			throwInvalidItemId("Product identifier cannot be empty or whitespace!");
 		
 		List<SupplierClient> supClientList = getSupplierClients(getSuppliers());
 		
@@ -112,23 +118,27 @@ public class MediatorPortImpl implements MediatorPortType{
 		if( itemQty < 0 ) throwInvalidQuantity("Quantity is invalid, failed.");
 
 		int supQuantity=0;
+		
 		try {
-			ProductView product = getSupplierClient(itemId.getSupplierId()).getProduct(itemId.getProductId());
+			Collection<UDDIRecord> supplier = endpointManager.getUddiNaming().listRecords(itemId.getSupplierId());
+		    SupplierClient client = getSupplierClients(supplier).get(0);
+		    ProductView product = client.getProduct(itemId.getProductId());
 			supQuantity = product.getQuantity();
 		} catch (BadProductId_Exception e) {
+			throwInvalidItemId("Item ID is incorrect, failed.");
+		} catch (UDDINamingException e) {
 			throwInvalidItemId("Item ID is incorrect, failed.");
 		}
 		
 		if( supQuantity < itemQty) throwNotEnoughItems("Not enough items, failed.");
 
-		
 		for(CartView c : carts){
 			
 			if(c.getCartId().equals(cartId)){
 				
 				for(CartItemView civ : c.getItems()){
 					
-					if(civ.getItem().getItemId().equals(itemId)){
+					if(civ.getItem().getItemId().getProductId().equals(itemId.getProductId()) && civ.getItem().getItemId().getSupplierId().equals(itemId.getSupplierId())){
 						int qty = civ.getQuantity() + itemQty;
 						if(qty > supQuantity) throwNotEnoughItems("Not enough items, failed.");
 						civ.setQuantity(qty);
@@ -300,17 +310,8 @@ public class MediatorPortImpl implements MediatorPortType{
     	return supClientList;
     	
 	}
-
-	public SupplierClient getSupplierClient(String supplier){
-		for(SupplierClient sc : getSupplierClients(getSuppliers())){
-			if(sc.getWsName().equals(supplier)){
-				return sc;
-			}
-		}
-		return null;
 	
-	}
-	
+	@Override
     public String ping(String arg0){
     	
     	Collection<UDDIRecord> suppliers=getSuppliers();
@@ -334,6 +335,7 @@ public class MediatorPortImpl implements MediatorPortType{
 			client.clear();
 		}
 		
+		carts.clear();
 	}
 
 	@Override
