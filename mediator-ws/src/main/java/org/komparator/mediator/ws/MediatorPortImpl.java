@@ -11,7 +11,6 @@ import javax.jws.WebService;
 import org.komparator.supplier.ws.BadText_Exception;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.ProductView;
-import org.komparator.supplier.ws.PurchaseView;
 import org.komparator.supplier.ws.cli.SupplierClient;
 import org.komparator.supplier.ws.cli.SupplierClientException;
 
