@@ -202,7 +202,11 @@ public class MediatorPortImpl implements MediatorPortType{
 
 	@Override
 	public void clear() {
-		// TODO Auto-generated method stub
+		
+		List<SupplierClient> supClientList = getSupplierClients(getSuppliers());
+		for(SupplierClient client : supClientList){
+			client.clear();
+		}
 		
 	}
 
