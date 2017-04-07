@@ -39,10 +39,7 @@ public class AddToCartIT extends BaseIT {
 			product.setPrice(20);
 			product.setQuantity(10);
 			supplierClients.get(0).createProduct(product);
-			ItemIdView item = new ItemIdView();
-			item.setProductId("X1");
-			item.setSupplierId(supplierClients.get(0).getWsName());
-			mediatorClient.addToCart("Cart5",item, 8);
+			
 			
 		}
 		{
@@ -52,10 +49,6 @@ public class AddToCartIT extends BaseIT {
 			product.setPrice(15);
 			product.setQuantity(15);
 			supplierClients.get(1).createProduct(product);
-			ItemIdView item = new ItemIdView();
-			item.setProductId("X2");
-			item.setSupplierId(supplierClients.get(0).getWsName());
-			mediatorClient.addToCart("Cart4",item, 10);
 			
 		}
 		{
@@ -65,16 +58,30 @@ public class AddToCartIT extends BaseIT {
 			product.setPrice(10);
 			product.setQuantity(5);
 			supplierClients.get(2).createProduct(product);
-			ItemIdView item = new ItemIdView();
-			item.setProductId("X3");
-			item.setSupplierId(supplierClients.get(0).getWsName());
-			mediatorClient.addToCart("Cart3",item, 4);
+
 		}
+		
 	}
 	
 	
     @Test
-    public void success() throws InvalidItemId_Exception {
+    public void success() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X1");
+		item.setSupplierId(supplierClients.get(0).getWsName());
+    	mediatorClient.addToCart("Cart1",item, 8);
+    	
+    	ItemIdView item2 = new ItemIdView();
+		item2.setProductId("X2");
+		item2.setSupplierId(supplierClients.get(1).getWsName());
+    	mediatorClient.addToCart("Cart2", item2, 10);
+    	
+    	ItemIdView item3 = new ItemIdView();
+		item3.setProductId("X3");
+		item3.setSupplierId(supplierClients.get(2).getWsName());
+		mediatorClient.addToCart("Cart3", item3, 4);
+		
     	List<CartView> items = mediatorClient.listCarts();
     	assertEquals(3,items.size());
     	assertEquals(items.get(0).getCartId(),"Cart1" );
@@ -83,9 +90,9 @@ public class AddToCartIT extends BaseIT {
     	assertEquals(items.get(0).getItems().get(0).getQuantity(), 8);
     	assertEquals(items.get(1).getItems().get(0).getQuantity(), 10);
     	assertEquals(items.get(2).getItems().get(0).getQuantity(), 4);
-    	assertEquals(items.get(0).getItems().get(0).getItem().getItemId(), "X1");
-    	assertEquals(items.get(0).getItems().get(0).getItem().getItemId(), "X2");
-    	assertEquals(items.get(0).getItems().get(0).getItem().getItemId(), "X3"); 	
+    	assertEquals(items.get(0).getItems().get(0).getItem().getItemId().getProductId(), "X1");
+    	assertEquals(items.get(1).getItems().get(0).getItem().getItemId().getProductId(), "X2");
+    	assertEquals(items.get(2).getItems().get(0).getItem().getItemId().getProductId(), "X3"); 	
     }
     
 
