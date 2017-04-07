@@ -187,8 +187,6 @@ public class BuyCartIT extends BaseIT {
 		mediatorClient.buyCart("Cart1","4929733993641562");
 	}
 	
-	
-	//TESTAR HISTORYYYYYYYYYYYYYYYYYYYY TODO
     @Test
     public void complete() throws InvalidItemId_Exception, EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
     	ShoppingResultView shoppingResult = mediatorClient.buyCart("Cart1","4024007102923926");

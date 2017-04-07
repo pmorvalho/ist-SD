@@ -120,7 +120,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test
-    public void successAddToCartTwoItems() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void successAddToCartItemsTwice() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");

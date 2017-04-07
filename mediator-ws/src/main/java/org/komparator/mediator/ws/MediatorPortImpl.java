@@ -251,7 +251,7 @@ public class MediatorPortImpl implements MediatorPortType{
 			//Set price
 			shoppingResult.setTotalPrice(totalprice);
 			//Shopping result finished
-			shoppingResults.add(shoppingResult);
+			shoppingResults.add(0, shoppingResult);
 			return shoppingResult;
 		}
 	}
