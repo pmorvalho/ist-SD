@@ -73,10 +73,6 @@ public class MediatorPortImpl implements MediatorPortType{
     		}
     	}
     	
-    	if(itemList.isEmpty()){
-    		throwInvalidItemId("Product does not exist in any Supplier.");
-    	}
-    	
     	Collections.sort(itemList,new ItemPriceComparator() );
 		return itemList;
 	}
@@ -321,14 +317,11 @@ public class MediatorPortImpl implements MediatorPortType{
     	Collection<UDDIRecord> suppliers=getSuppliers();
     	List<SupplierClient> supClientList = getSupplierClients(suppliers);
     	String result = "";
-    	int i = 0;
     	for(SupplierClient client : supClientList){
-    		result+=client.ping("Supplier Client " + i)+ "\n";
-    		i++;
+    		result+=client.ping(arg0)+ "\n";
     	}
     	
     	return result;
-    	
     }
 
 	@Override
