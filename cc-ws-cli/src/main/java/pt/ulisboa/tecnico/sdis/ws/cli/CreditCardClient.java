@@ -62,6 +62,14 @@ public class CreditCardClient implements CreditCard {
         uddiLookup();
         createStub();
     }
+    
+    public void setWsName(String wsName){
+    	this.wsName=wsName;
+    }
+    
+    public String getWsName(){
+    	return wsName;
+    }
 
     /** UDDI lookup */
     private void uddiLookup() throws CreditCardClientException {

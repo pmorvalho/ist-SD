@@ -8,12 +8,16 @@ import java.util.List;
 
 import javax.jws.WebService;
 
-import org.komparator.supplier.ws.BadText_Exception;
 import org.komparator.supplier.ws.BadProductId_Exception;
+import org.komparator.supplier.ws.BadQuantity_Exception;
+import org.komparator.supplier.ws.BadText_Exception;
+import org.komparator.supplier.ws.InsufficientQuantity_Exception;
 import org.komparator.supplier.ws.ProductView;
 import org.komparator.supplier.ws.cli.SupplierClient;
 import org.komparator.supplier.ws.cli.SupplierClientException;
 
+import pt.ulisboa.tecnico.sdis.ws.cli.CreditCardClient;
+import pt.ulisboa.tecnico.sdis.ws.cli.CreditCardClientException;
 import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINamingException;
 import pt.ulisboa.tecnico.sdis.ws.uddi.UDDIRecord;
 
@@ -34,6 +38,8 @@ public class MediatorPortImpl implements MediatorPortType{
 	private ArrayList<ShoppingResultView> shoppingResults = new ArrayList<ShoppingResultView>();
 
 	private List<CartView> carts = new ArrayList<CartView>();
+	
+	private static int NumberOfBoughtCarts;
 
 	public MediatorPortImpl(MediatorEndpointManager endpointManager) {
 		this.endpointManager = endpointManager;
@@ -43,6 +49,12 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	@Override
 	public List<ItemView> getItems(String productId) throws InvalidItemId_Exception {
+		// check input - description
+		if (productId == null)
+			throwInvalidItemId("Product identifier cannot be null!");
+		productId = productId.trim();
+		if (productId.length() == 0)
+			throwInvalidItemId("Product identifier cannot be empty or whitespace!");
 		
 		List<SupplierClient> supClientList = getSupplierClients(getSuppliers());
 		
@@ -71,7 +83,13 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	@Override
 	public List<ItemView> searchItems(String descText) throws InvalidText_Exception {
-		//TODO testar input
+		// check input - description
+		if (descText == null)
+			throwInvalidText("Product description cannot be null!");
+		descText = descText.trim();
+		if (descText.length() == 0)
+			throwInvalidText("Product description cannot be empty or whitespace!");
+		
 		List<ItemView> itemList = new ArrayList<ItemView>();
 		
 		for (SupplierClient supC : getSupplierClients(getSuppliers())) {
@@ -80,6 +98,7 @@ public class MediatorPortImpl implements MediatorPortType{
 					itemList.add(createItemView(prod, supC));
 				}
 			} catch (BadText_Exception e) {
+				//Should not happen. Error handled before
 				throwInvalidText("Invalid description");
 			}
 		}
@@ -141,13 +160,123 @@ public class MediatorPortImpl implements MediatorPortType{
 	@Override
 	public ShoppingResultView buyCart(String cartId, String creditCardNr)
 			throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
-		// TODO Auto-generated method stub
-		return null;
+		
+		CreditCardClient ccClient = getCreditCardClient(getCreditCard());
+		if(!ccClient.validateNumber(creditCardNr)){
+			throwInvalidCreditCard("Invalid Credit Card, could not validate number");
+		}
+		
+		if( cartId==null || cartId.trim().equals("") ) throwInvalidCartId("Cart ID is incorrect, failed.");
+		//Still have to add price, result and define purchased and dropped items, since we don't know them yet
+		//Set ID
+		ShoppingResultView shoppingResult = createShoppingResultView("Cart"+NumberOfBoughtCarts,null,0);
+		List<CartItemView> allItems = new ArrayList<CartItemView>();
+		int totalprice=0;
+		
+		for(CartView c : carts){
+
+			if(c.getCartId().equals(cartId)){
+				if(c.getItems().size()==0){
+					throwEmptyCart("The selected cart is empty, failed.");
+				}
+				for(CartItemView civ : c.getItems()){
+					allItems.add(civ);
+					
+					String productId = civ.getItem().getItemId().getProductId();
+					String supplierId = civ.getItem().getItemId().getSupplierId();
+					int quantity = civ.getQuantity();
+					Collection<UDDIRecord> supplier;
+					SupplierClient client;
+					try {
+						supplier = endpointManager.getUddiNaming().listRecords(supplierId);
+					} catch (UDDINamingException e) {
+						System.out.println("Could not find supplier, continuing");
+						continue;
+					}
+					if(supplier.size()>1){
+						System.out.println("More than one supplier, continuing");
+						continue;
+					}
+					
+					client= getSupplierClients(supplier).get(0);
+					
+					try {
+						client.buyProduct(productId, quantity);
+					} catch (BadProductId_Exception e) {
+						System.out.println("Malformed product ID, continuing");
+						continue;
+					} catch (BadQuantity_Exception e) {
+						System.out.println("Invalid quantity, continuing");
+						continue;
+					} catch (InsufficientQuantity_Exception e) {
+						System.out.println("Insufficient quantity available, continuing");
+						continue;
+					}
+					//Set purchased items
+					shoppingResult.getPurchasedItems().add(civ);
+					totalprice+= civ.getItem().getPrice();
+				}
+
+			}
+		}
+		//set dropped items
+		for(CartItemView civ : allItems){
+			if(!shoppingResult.getPurchasedItems().contains(civ)){
+				shoppingResult.getDroppedItems().add(civ);
+			}
+		}
+		
+		//set result
+		if(shoppingResult.getPurchasedItems().isEmpty()){
+			shoppingResult.setResult(Result.EMPTY);
+		}
+		else if(shoppingResult.getPurchasedItems().equals(allItems)){
+			shoppingResult.setResult(Result.COMPLETE);
+		}
+		else{
+			shoppingResult.setResult(Result.PARTIAL);
+		}
+		//Set price
+		shoppingResult.setTotalPrice(totalprice);
+		
+		return shoppingResult;
+
 	}
 	
     
 	// Auxiliary operations --------------------------------------------------	
 	
+	public UDDIRecord getCreditCard(){
+		Collection<UDDIRecord> cc;
+    	//É para fazer try catch ou throws? !!!!!!!!!!!!!!!!!!! TODO
+    	try{
+    		cc = endpointManager.getUddiNaming().listRecords("CreditCard");
+    	}
+    	catch(UDDINamingException e){
+    		System.out.println("Could not find Credit Card");
+    		return null;
+    	}
+    	
+    	if(cc.size()!=1){
+    		System.out.println("Found more than one Credit Card");
+    	}
+    	return cc.iterator().next();
+	} 
+	
+	public CreditCardClient getCreditCardClient(UDDIRecord record){
+    	CreditCardClient client;
+    	try{
+    		client = new CreditCardClient(record.getUrl());
+    		client.setWsName(record.getOrgName());
+    	}
+    	catch(CreditCardClientException e){
+    		System.out.println("could not create credit card client");
+    		return null;
+    	}
+    	
+    	return client;
+    	
+	}
 	
 	public Collection<UDDIRecord> getSuppliers(){
 		Collection<UDDIRecord> suppliers;
@@ -172,13 +301,15 @@ public class MediatorPortImpl implements MediatorPortType{
     			
     		}
     		catch(SupplierClientException e){
-    			System.out.println("");
+    			System.out.println("Could not create supplier clients");
+    			return null;
     		}
     	}
     	return supClientList;
     	
 	}
 	
+	@Override
     public String ping(String arg0){
     	
     	Collection<UDDIRecord> suppliers=getSuppliers();
@@ -319,6 +450,17 @@ public class MediatorPortImpl implements MediatorPortType{
 		throw new InvalidQuantity_Exception(message, faultInfo);
 	}
 	
+	private void throwInvalidCreditCard(final String message) throws InvalidCreditCard_Exception{
+		InvalidCreditCard faultInfo = new InvalidCreditCard();
+		faultInfo.message = message;
+		throw new InvalidCreditCard_Exception(message, faultInfo);
+	}
+	
+	private void throwEmptyCart(final String message) throws EmptyCart_Exception{
+		EmptyCart faultInfo = new EmptyCart();
+		faultInfo.message = message;
+		throw new EmptyCart_Exception(message, faultInfo);
+	}
 	
 	
 }
