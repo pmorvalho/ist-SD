@@ -146,16 +146,36 @@ public class AddToCartIT extends BaseIT {
     	mediatorClient.addToCart("   ", item, 4);
     }
     
-//    @Test(expected = InvalidItemId_Exception.class)
-//    public void addtoCartNullItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
-//		
-//    	ItemIdView item = new ItemIdView();
-//		item.setProductId(null);
-//		item.setSupplierId(supplierClients.get(1).getWsName());
-//		
-//    	mediatorClient.addToCart("Cart2", item, 4);
-//    }
-//    
+    @Test(expected = InvalidCartId_Exception.class)
+    public void addtoCartNewLineCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X2");
+		item.setSupplierId(supplierClients.get(1).getWsName());
+		
+    	mediatorClient.addToCart("\n", item, 4);
+    }
+    
+    @Test(expected = InvalidItemId_Exception.class)
+    public void addtoCartNullItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X2");
+		item.setSupplierId(supplierClients.get(1).getWsName());
+		
+    	mediatorClient.addToCart("Cart2", null, 4);
+    }
+    
+    @Test(expected = InvalidItemId_Exception.class)
+    public void addtoCartNewLineItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("\n");
+		item.setSupplierId(supplierClients.get(1).getWsName());
+		
+    	mediatorClient.addToCart("Cart2", item, 4);
+    }
+    
     @Test(expected = InvalidItemId_Exception.class)
     public void addtoCartEmptyItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		

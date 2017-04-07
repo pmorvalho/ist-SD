@@ -113,9 +113,7 @@ public class MediatorPortImpl implements MediatorPortType{
 		
 		if( cartId == null || cartId.trim().equals("") ) throwInvalidCartId("Cart ID is incorrect, failed.");
 				
-		String productId = null;
-		productId = itemId.getProductId();
-		if( itemId == null || itemId.getProductId().trim().equals("") || productId==null || getItems(itemId.getProductId()).isEmpty())  throwInvalidItemId("Item ID is incorrect, failed.");
+		if( itemId == null || itemId.getProductId().trim().equals("")|| getItems(itemId.getProductId()).isEmpty())  throwInvalidItemId("Item ID is incorrect, failed.");
 		
 		if( itemQty < 0 ) throwInvalidQuantity("Quantity is invalid, failed.");
 
@@ -125,8 +123,9 @@ public class MediatorPortImpl implements MediatorPortType{
 		try {
 			Collection<UDDIRecord> supplier = endpointManager.getUddiNaming().listRecords(itemId.getSupplierId());
 		    client = getSupplierClients(supplier).get(0);
-		    if (client == null ) throw new BadProductId_Exception(cartId, null);
+		    if (client == null ) throw new BadProductId_Exception(itemId.getSupplierId(), null);
 		    product = client.getProduct(itemId.getProductId());
+		    if (product == null ) throw new BadProductId_Exception(itemId.getProductId(), null);
 			supQuantity = product.getQuantity();
 		} catch (BadProductId_Exception e) {
 			throwInvalidItemId("Item ID is incorrect, failed.");
@@ -142,7 +141,8 @@ public class MediatorPortImpl implements MediatorPortType{
 				
 				for(CartItemView civ : c.getItems()){
 					
-					if(civ.getItem().getItemId().getProductId().equals(itemId.getProductId()) && civ.getItem().getItemId().getSupplierId().equals(itemId.getSupplierId())){
+					if(civ.getItem().getItemId().getProductId().equals(itemId.getProductId()) && 
+							civ.getItem().getItemId().getSupplierId().equals(itemId.getSupplierId())){
 						int qty = civ.getQuantity() + itemQty;
 						if(qty > supQuantity) throwNotEnoughItems("Not enough items, failed.");
 						civ.setQuantity(qty);
