@@ -111,7 +111,7 @@ public class MediatorPortImpl implements MediatorPortType{
 				
 		if( itemId == null || itemId.getProductId().trim().equals("")|| getItems(itemId.getProductId()).isEmpty())  throwInvalidItemId("Item ID is incorrect, failed.");
 		
-		if( itemQty < 0 ) throwInvalidQuantity("Quantity is invalid, failed.");
+		if( itemQty <= 0 ) throwInvalidQuantity("Quantity is invalid, failed.");
 
 		int supQuantity=0;
 		List<SupplierClient> clientsList = new ArrayList<SupplierClient>();
@@ -156,8 +156,6 @@ public class MediatorPortImpl implements MediatorPortType{
 				return;
 			}
 		}
-		
-		if(itemQty > supQuantity) throwNotEnoughItems("Not enough items, failed.");
 		
 		carts.add(createCartView(cartId, product, client, itemQty));
 
