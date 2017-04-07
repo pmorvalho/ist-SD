@@ -28,7 +28,6 @@ public class AddToCartIT extends BaseIT {
 	public void setUp() throws BadProductId_Exception, BadProduct_Exception, InvalidCartId_Exception, InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
 		
-		// clear remote service state before all tests
 
 		{
 			ProductView product = new ProductView();
@@ -37,6 +36,16 @@ public class AddToCartIT extends BaseIT {
 			product.setPrice(20);
 			product.setQuantity(10);
 			supplierClients.get(0).createProduct(product);
+			
+			
+		}
+		{
+			ProductView product = new ProductView();
+			product.setId("X1");
+			product.setDesc("Baseball");
+			product.setPrice(15);
+			product.setQuantity(8);
+			supplierClients.get(1).createProduct(product);
 			
 			
 		}
@@ -80,7 +89,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test
-    public void successAddToCart3Carts() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void successAddTo3Carts() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X1");
@@ -111,7 +120,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test
-    public void successAddtoCartToTheSameCart() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void successAddToCartTwoItems() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -129,7 +138,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test
-    public void successAddtoCartMoreThanOneItemDiffSuppliers() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void successAddToCartTwoItemsFromDiffSuppliers() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -151,9 +160,58 @@ public class AddToCartIT extends BaseIT {
     	assertEquals(carts.get(0).getItems().get(1).getItem().getItemId().getProductId(), "X3");
     }
    
+//  same itemId from diff supplier
+    @Test
+    public void successAddToCartSameIdDiffSuppliers() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X1");
+		item.setSupplierId(supplierClients.get(1).getWsName());
+
+    	ItemIdView item2 = new ItemIdView();
+		item2.setProductId("X1");
+		item2.setSupplierId(supplierClients.get(0).getWsName());
+    	mediatorClient.addToCart("Cart2", item2, 4);
+    	mediatorClient.addToCart("Cart2", item, 6);
+
+    	
+    	List<CartView> carts = mediatorClient.listCarts();
+    	assertEquals(1,carts.size());
+    	assertEquals(carts.get(0).getCartId(),"Cart2" );
+    	assertEquals(carts.get(0).getItems().get(0).getQuantity(), 4);
+    	assertEquals(carts.get(0).getItems().get(1).getQuantity(), 6);
+    	assertEquals(carts.get(0).getItems().get(0).getItem().getItemId().getProductId(), "X1");
+    	assertEquals(carts.get(0).getItems().get(1).getItem().getItemId().getProductId(), "X1");
+    }
+
+//  same itemId to diff carts
+    @Test
+    public void successAddToDiffCartsSameItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X1");
+		item.setSupplierId(supplierClients.get(1).getWsName());
+
+    	ItemIdView item2 = new ItemIdView();
+		item2.setProductId("X1");
+		item2.setSupplierId(supplierClients.get(1).getWsName());
+    	mediatorClient.addToCart("Cart2", item, 3);
+    	mediatorClient.addToCart("Cart3", item, 3);
+
+    	
+    	List<CartView> carts = mediatorClient.listCarts();
+    	assertEquals(2,carts.size());
+    	assertEquals(carts.get(0).getCartId(),"Cart2" );
+    	assertEquals(carts.get(1).getCartId(),"Cart3" );
+    	assertEquals(carts.get(0).getItems().get(0).getQuantity(), 3);
+    	assertEquals(carts.get(1).getItems().get(0).getQuantity(), 3);
+    	assertEquals(carts.get(0).getItems().get(0).getItem().getItemId().getProductId(), "X1");
+    	assertEquals(carts.get(1).getItems().get(0).getItem().getItemId().getProductId(), "X1");
+    }
+    
 //   Input Tests
     @Test(expected = InvalidCartId_Exception.class)
-    public void addtoCartNullCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartNullCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -163,7 +221,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test(expected = InvalidCartId_Exception.class)
-    public void addtoCartEmptyCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartEmptyCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -173,7 +231,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test(expected = InvalidCartId_Exception.class)
-    public void addtoCartBlankCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartBlankCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -183,7 +241,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test(expected = InvalidCartId_Exception.class)
-    public void addtoCartNewLineCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartNewLineCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -193,7 +251,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test(expected = InvalidCartId_Exception.class)
-    public void addtoCartTabCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartTabCartId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -203,7 +261,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test(expected = InvalidItemId_Exception.class)
-    public void addtoCartNullItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartNullItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -212,50 +270,10 @@ public class AddToCartIT extends BaseIT {
     	mediatorClient.addToCart("Cart2", null, 4);
     }
     
-    @Test(expected = InvalidItemId_Exception.class)
-    public void addtoCartNewLineItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
-		
-    	ItemIdView item = new ItemIdView();
-		item.setProductId("\n");
-		item.setSupplierId(supplierClients.get(1).getWsName());
-		
-    	mediatorClient.addToCart("Cart2", item, 4);
-    }
-    
-    @Test(expected = InvalidItemId_Exception.class)
-    public void addtoCartEmptyItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
-		
-    	ItemIdView item = new ItemIdView();
-		item.setProductId("");
-		item.setSupplierId(supplierClients.get(1).getWsName());
-		
-    	mediatorClient.addToCart("Cart2", item, 4);
-    }
-    
-    @Test(expected = InvalidItemId_Exception.class)
-    public void addtoCartBlankItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
-		
-    	ItemIdView item = new ItemIdView();
-		item.setProductId("   ");
-		item.setSupplierId(supplierClients.get(1).getWsName());
-		
-    	mediatorClient.addToCart("Cart2", item, 4);
-    }
-    
-    @Test(expected = InvalidItemId_Exception.class)
-    public void addtoCartTabItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
-		
-    	ItemIdView item = new ItemIdView();
-		item.setProductId("\t");
-		item.setSupplierId(supplierClients.get(1).getWsName());
-		
-    	mediatorClient.addToCart("Cart2", item, 4);
-    }
-    
 //    Exceptions tests
     
     @Test(expected = NotEnoughItems_Exception.class)
-    public void addtoCartNotEnoughItem() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartNotEnoughItem() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -265,7 +283,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test(expected = NotEnoughItems_Exception.class)
-    public void addtoCartNotEnoughItemAdd2Times() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartNotEnoughItemAdd2Times() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -275,9 +293,21 @@ public class AddToCartIT extends BaseIT {
 
     	mediatorClient.addToCart("Cart2", item, 12);
     }
+
+    @Test(expected = NotEnoughItems_Exception.class)
+    public void addToCartMaxQuantityAvailablePlusOne() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X2");
+		item.setSupplierId(supplierClients.get(1).getWsName());
+		
+    	mediatorClient.addToCart("Cart2", item, 15); 
+//    	15 is the limit quantity of X2
+    	mediatorClient.addToCart("Cart2", item, 1);
+    }
     
     @Test
-    public void addToCartLimitNumberItem() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartMaxQuantityAvailable() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X1");
@@ -293,7 +323,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test(expected = InvalidQuantity_Exception.class)
-    public void addtoCartNegativeQuantity() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartNegativeQuantity() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -303,7 +333,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test(expected = InvalidQuantity_Exception.class)
-    public void addtoCartZeroItems() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartZeroItems() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X2");
@@ -313,7 +343,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test(expected = InvalidItemId_Exception.class)
-    public void addtoCartInvalidItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartInvalidItemId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X4");
@@ -323,7 +353,7 @@ public class AddToCartIT extends BaseIT {
     }
     
     @Test(expected = InvalidItemId_Exception.class)
-    public void addtoCartInvalidSupplierId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+    public void addToCartInvalidSupplierId() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
     	ItemIdView item = new ItemIdView();
 		item.setProductId("X3");
@@ -336,6 +366,5 @@ public class AddToCartIT extends BaseIT {
     public void deleteCarts(){
     	mediatorClient.clear();
     }
-
-
+    
 }
