@@ -1,11 +1,16 @@
 package org.komparator.mediator.ws.it;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.komparator.mediator.ws.cli.MediatorClient;
+import org.komparator.supplier.ws.cli.SupplierClient;
+
+
 
 public class BaseIT {
 
@@ -13,6 +18,7 @@ public class BaseIT {
 	protected static Properties testProps;
 
 	protected static MediatorClient mediatorClient;
+	protected static List<SupplierClient> supplierClients = new ArrayList<SupplierClient>();
 
 	@BeforeClass
 	public static void oneTimeSetup() throws Exception {
@@ -37,11 +43,15 @@ public class BaseIT {
 		} else {
 			mediatorClient = new MediatorClient(wsURL);
 		}
-
+		for(int i=1;i<=3;i++){
+			supplierClients.add(new SupplierClient(uddiURL, "A68_Supplier"+i) );
+		}
 	}
 
 	@AfterClass
 	public static void cleanup() {
+		mediatorClient.clear();
+		supplierClients.clear();
 	}
 
 }
