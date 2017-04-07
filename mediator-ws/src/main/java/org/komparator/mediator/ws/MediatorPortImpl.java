@@ -111,18 +111,22 @@ public class MediatorPortImpl implements MediatorPortType{
 	public void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
 	InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {		
 		
-		if( cartId==null || cartId.trim().equals("") ) throwInvalidCartId("Cart ID is incorrect, failed.");
+		if( cartId == null || cartId.trim().equals("") ) throwInvalidCartId("Cart ID is incorrect, failed.");
 				
-		if(itemId == null || itemId.getProductId().trim().equals("") || getItems(itemId.getProductId())==null)  throwInvalidItemId("Item ID is incorrect, failed.");
+		String productId = null;
+		productId = itemId.getProductId();
+		if( itemId == null || itemId.getProductId().trim().equals("") || productId==null || getItems(itemId.getProductId()).isEmpty())  throwInvalidItemId("Item ID is incorrect, failed.");
 		
 		if( itemQty < 0 ) throwInvalidQuantity("Quantity is invalid, failed.");
 
 		int supQuantity=0;
-		
+		SupplierClient client = null;
+		ProductView product = null;
 		try {
 			Collection<UDDIRecord> supplier = endpointManager.getUddiNaming().listRecords(itemId.getSupplierId());
-		    SupplierClient client = getSupplierClients(supplier).get(0);
-		    ProductView product = client.getProduct(itemId.getProductId());
+		    client = getSupplierClients(supplier).get(0);
+		    if (client == null ) throw new BadProductId_Exception(cartId, null);
+		    product = client.getProduct(itemId.getProductId());
 			supQuantity = product.getQuantity();
 		} catch (BadProductId_Exception e) {
 			throwInvalidItemId("Item ID is incorrect, failed.");
@@ -146,14 +150,14 @@ public class MediatorPortImpl implements MediatorPortType{
 					}
 				}
 				
-				c.getItems().add(createCartItemView(itemId, itemQty));
+				c.getItems().add(createCartItemView(product, client, itemQty));
 				return;
 			}
 		}
 		
 		if(itemQty > supQuantity) throwNotEnoughItems("Not enough items, failed.");
 		
-		carts.add(createCartView(cartId, itemId, itemQty));
+		carts.add(createCartView(cartId, product, client, itemQty));
 
 	}
 	
@@ -403,10 +407,8 @@ public class MediatorPortImpl implements MediatorPortType{
 		return view;
 	}
 
-	CartItemView createCartItemView(ItemIdView id, int qty){
-		ItemView itemView = new ItemView();
-		itemView.setItemId(id);
-		
+	CartItemView createCartItemView(ProductView product, SupplierClient client, int qty){
+		ItemView itemView = createItemView(product, client);
 		CartItemView cartItemView = new CartItemView();
 		cartItemView.setItem(itemView);
 		cartItemView.setQuantity(qty);
@@ -415,9 +417,9 @@ public class MediatorPortImpl implements MediatorPortType{
 		
 	}
 	
-	CartView createCartView(String cartId, ItemIdView id, int qty){
+	CartView createCartView(String cartId, ProductView product, SupplierClient client, int qty){
 		
-		CartItemView cartItemView = createCartItemView(id, qty);
+		CartItemView cartItemView = createCartItemView(product, client, qty);
 		CartView cartView = new CartView();
 		cartView.setCartId(cartId);
 		cartView.getItems().add(cartItemView);
