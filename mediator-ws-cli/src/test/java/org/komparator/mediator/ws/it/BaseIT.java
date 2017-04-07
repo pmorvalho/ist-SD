@@ -43,11 +43,8 @@ public class BaseIT {
 		} else {
 			mediatorClient = new MediatorClient(wsURL);
 		}
-//		TODO mudar para construtor de 2 args
 		for(int i=1;i<=3;i++){
-			supplierClients.add(new SupplierClient("http://localhost:808"+i+"/supplier-ws/endpoint") );
-//			supplierClients.add(new SupplierClient(uddiURL, "A68_Supplier"+(i+1)) );
-////			System.out.println("Added Supplier: " + supplierClients.get(i).getWsName() + " to supplierClients");
+			supplierClients.add(new SupplierClient(uddiURL, "A68_Supplier"+i) );
 		}
 	}
 
