@@ -219,7 +219,7 @@ public class MediatorPortImpl implements MediatorPortType{
 					}
 					//Set purchased items
 					shoppingResult.getPurchasedItems().add(civ);
-					totalprice+= civ.getItem().getPrice();
+					totalprice+= civ.getItem().getPrice()*civ.getQuantity();
 				
 				}
 				carts.remove(c);
