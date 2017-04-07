@@ -49,6 +49,12 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	@Override
 	public List<ItemView> getItems(String productId) throws InvalidItemId_Exception {
+		// check input - description
+		if (productId == null)
+			throwInvalidItemId("Product identifier cannot be null!");
+		productId = productId.trim();
+		if (productId.length() == 0)
+			throwInvalidItemId("Product identifier cannot be empty or whitespace!");
 		
 		List<SupplierClient> supClientList = getSupplierClients(getSuppliers());
 		
@@ -309,6 +315,7 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	}
 	
+	@Override
     public String ping(String arg0){
     	
     	Collection<UDDIRecord> suppliers=getSuppliers();

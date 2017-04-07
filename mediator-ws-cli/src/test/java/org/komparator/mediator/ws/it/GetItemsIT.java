@@ -8,6 +8,7 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.komparator.mediator.ws.InvalidItemId_Exception;
+import org.komparator.mediator.ws.InvalidText_Exception;
 import org.komparator.mediator.ws.ItemView;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.BadProduct_Exception;
@@ -26,7 +27,6 @@ public class GetItemsIT extends BaseIT {
 	
 	@BeforeClass
 	public static void oneTimeSetUp() throws BadProductId_Exception, BadProduct_Exception {
-		
 		
 		// clear remote service state before all tests
 
@@ -59,6 +59,35 @@ public class GetItemsIT extends BaseIT {
 		}
 	}
 	
+	// Bad input tests
+
+	@Test(expected = InvalidItemId_Exception.class)
+	public void searchProductNullDescTest() throws InvalidItemId_Exception {
+		mediatorClient.getItems(null);
+	}
+
+	@Test(expected = InvalidItemId_Exception.class)
+	public void searchProductWhitespaceDescTest() throws InvalidItemId_Exception {
+		mediatorClient.getItems(" ");
+	}
+
+	@Test(expected = InvalidItemId_Exception.class)
+	public void searchProductEmptyDescTest() throws InvalidItemId_Exception {
+		mediatorClient.getItems("");
+	}
+
+	@Test(expected = InvalidItemId_Exception.class)
+	public void searchProductNewLineDescTest() throws InvalidItemId_Exception {
+		mediatorClient.getItems("\n");
+	}
+
+	@Test(expected = InvalidItemId_Exception.class)
+	public void searchProductTabDescTest() throws InvalidItemId_Exception {
+		mediatorClient.getItems("\t");
+	}
+	
+
+	// Main tests
 	
     @Test
     public void success() throws InvalidItemId_Exception {
