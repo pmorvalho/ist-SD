@@ -57,6 +57,23 @@ public class GetItemsIT extends BaseIT {
 			product.setQuantity(30);
 			supplierClients.get(2).createProduct(product);
 		}
+		
+		{
+			ProductView product = new ProductView();
+			product.setId("Y1");
+			product.setDesc("Basketball");
+			product.setPrice(20);
+			product.setQuantity(10);
+			supplierClients.get(0).createProduct(product);
+		}
+		{
+			ProductView product = new ProductView();
+			product.setId("Z1");
+			product.setDesc("Tennisball");
+			product.setPrice(10);
+			product.setQuantity(20);
+			supplierClients.get(1).createProduct(product);
+		}
 	}
 	
 	// Bad input tests
@@ -97,9 +114,23 @@ public class GetItemsIT extends BaseIT {
     	assertEquals(items.get(1).getItemId().getSupplierId(),"A68_Supplier1" );
     	assertEquals(items.get(2).getItemId().getSupplierId(),"A68_Supplier3" );
     }
+    
+    @Test
+    public void oneItemSuccess() throws InvalidItemId_Exception {
+    	List<ItemView> items = mediatorClient.getItems("Y1");
+    	assertEquals(1,items.size());
+    	assertEquals(items.get(0).getItemId().getSupplierId(),"A68_Supplier1" );
+    }
+    
+    @Test
+    public void anotherOneItemSuccess() throws InvalidItemId_Exception {
+    	List<ItemView> items = mediatorClient.getItems("Z1");
+    	assertEquals(1,items.size());
+    	assertEquals(items.get(0).getItemId().getSupplierId(),"A68_Supplier2" );
+    }
 
     @Test
-    public void productDoesNotExist() throws InvalidItemId_Exception {
+    public void noItemsExist() throws InvalidItemId_Exception {
     	List<ItemView> items = mediatorClient.getItems("ABBA");
     	assertEquals(0,items.size());
     }
