@@ -3,7 +3,8 @@ package org.komparator.mediator.ws.it;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.komparator.mediator.ws.EmptyCart_Exception;
 import org.komparator.mediator.ws.InvalidCartId_Exception;
@@ -29,8 +30,8 @@ public class BuyCartIT extends BaseIT {
 
     // public String ping(String x)
 	
-	@BeforeClass
-	public static void oneTimeSetUp() throws BadProductId_Exception, BadProduct_Exception, InvalidCartId_Exception, InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+	@Before
+	public void oneTimeSetUp() throws BadProductId_Exception, BadProduct_Exception, InvalidCartId_Exception, InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
 		
 		
 		// clear remote service state before all tests
@@ -118,6 +119,9 @@ public class BuyCartIT extends BaseIT {
 	
     @Test
     public void complete() throws InvalidItemId_Exception, EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
+    	if(supplierClients.get(0).getWsName()==null){
+    		System.out.println("WS NAME TA NULLLLLLLLLLLLLLLLLLLL");
+    	}
     	ShoppingResultView shoppingResult = mediatorClient.buyCart("Cart1","4024007102923926");
     	assertEquals("CartResult1",shoppingResult.getId());
     	assertEquals(Result.COMPLETE,shoppingResult.getResult());
@@ -131,7 +135,7 @@ public class BuyCartIT extends BaseIT {
     public void partial()throws InvalidItemId_Exception, EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception{
     	ShoppingResultView setupShoppingResult = mediatorClient.buyCart("Cart2","4024007102923926");
     	ShoppingResultView shoppingResult = mediatorClient.buyCart("Cart1","4024007102923926");
-    	assertEquals("CartResult1",shoppingResult.getId());
+    	assertEquals("CartResult2",shoppingResult.getId());
     	assertEquals(Result.PARTIAL,shoppingResult.getResult());
     	assertEquals(2,shoppingResult.getPurchasedItems().size());
     	assertEquals(1,shoppingResult.getDroppedItems().size());
@@ -143,7 +147,7 @@ public class BuyCartIT extends BaseIT {
     public void empty()throws InvalidItemId_Exception, EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception{
     	ShoppingResultView setupShoppingResult = mediatorClient.buyCart("Cart3","4024007102923926");
     	ShoppingResultView shoppingResult = mediatorClient.buyCart("Cart1","4024007102923926");
-    	assertEquals("CartResult1",shoppingResult.getId());
+    	assertEquals("CartResult2",shoppingResult.getId());
     	assertEquals(Result.EMPTY,shoppingResult.getResult());
     	assertEquals(0,shoppingResult.getPurchasedItems().size());
     	assertEquals(3,shoppingResult.getDroppedItems().size());
@@ -155,5 +159,10 @@ public class BuyCartIT extends BaseIT {
     public void duplicate() throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception{
     	ShoppingResultView SetupshoppingResult = mediatorClient.buyCart("Cart1","4024007102923926");
     	ShoppingResultView shoppingResult = mediatorClient.buyCart("Cart1","4024007102923926");
+    }
+    
+    @After
+    public void deleteCarts(){
+    	mediatorClient.clear();
     }
 }

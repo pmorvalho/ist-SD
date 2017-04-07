@@ -123,10 +123,13 @@ public class MediatorPortImpl implements MediatorPortType{
 		SupplierClient client = null;
 		ProductView product = null;
 		try {
+			//String supplier = endpointManager.getUddiNaming().lookup(itemId.getSupplierId());
+		    //client = getSupplierClient(supplier);
 			Collection<UDDIRecord> supplier = endpointManager.getUddiNaming().listRecords(itemId.getSupplierId());
 		    client = getSupplierClients(supplier).get(0);
 		    if (client == null ) throw new BadProductId_Exception(cartId, null);
 		    product = client.getProduct(itemId.getProductId());
+		    if (product==null) throw new BadProductId_Exception(cartId, null);
 			supQuantity = product.getQuantity();
 		} catch (BadProductId_Exception e) {
 			throwInvalidItemId("Item ID is incorrect, failed.");
@@ -177,33 +180,31 @@ public class MediatorPortImpl implements MediatorPortType{
 		ShoppingResultView shoppingResult = createShoppingResultView("CartResult"+NumberOfBoughtCarts,null,0);
 		List<CartItemView> allItems = new ArrayList<CartItemView>();
 		int totalprice=0;
-		
+		boolean foundCart=false;
 		for(CartView c : carts){
 
 			if(c.getCartId().equals(cartId)){
+				foundCart=true;
 				if(c.getItems().size()==0){
 					throwEmptyCart("The selected cart is empty, failed.");
 				}
+				
 				for(CartItemView civ : c.getItems()){
 					allItems.add(civ);
 					
 					String productId = civ.getItem().getItemId().getProductId();
 					String supplierId = civ.getItem().getItemId().getSupplierId();
 					int quantity = civ.getQuantity();
-					Collection<UDDIRecord> supplier;
+					String supplier;
 					SupplierClient client;
 					try {
-						supplier = endpointManager.getUddiNaming().listRecords(supplierId);
+						supplier = endpointManager.getUddiNaming().lookup(supplierId);
 					} catch (UDDINamingException e) {
 						System.out.println("Could not find supplier, continuing");
 						continue;
 					}
-					if(supplier.size()>1){
-						System.out.println("More than one supplier, continuing");
-						continue;
-					}
 					
-					client= getSupplierClients(supplier).get(0);
+					client= getSupplierClient(supplier);
 					
 					try {
 						client.buyProduct(productId, quantity);
@@ -223,11 +224,13 @@ public class MediatorPortImpl implements MediatorPortType{
 				
 				}
 				carts.remove(c);
+				break;
 
 			}
-			else{
-				throwInvalidCartId("Could not find this cart, failed");
-			}
+		}
+		
+		if(!foundCart){
+			throwInvalidCartId("Could not find cart, failed");
 		}
 		//set dropped items
 		for(CartItemView civ : allItems){
@@ -319,6 +322,21 @@ public class MediatorPortImpl implements MediatorPortType{
     	
 	}
 	
+	public SupplierClient getSupplierClient(String url){
+    	SupplierClient client;
+		try{
+    		client = new SupplierClient(url);
+
+    	}
+    	catch(SupplierClientException e){
+    		System.out.println("Could not create supplier clients");
+    		return null;
+    	}
+    	
+    	return client;
+    	
+	}
+	
 	@Override
     public String ping(String arg0){
     	
@@ -344,6 +362,8 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 		
 		carts.clear();
+		shoppingResults.clear();
+		NumberOfBoughtCarts=0;
 	}
 
 	@Override
