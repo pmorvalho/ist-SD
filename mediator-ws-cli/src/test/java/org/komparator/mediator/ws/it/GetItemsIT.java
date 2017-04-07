@@ -98,4 +98,18 @@ public class GetItemsIT extends BaseIT {
     	assertEquals(items.get(2).getItemId().getSupplierId(),"A68_Supplier3" );
     }
 
+    @Test
+    public void productDoesNotExist() throws InvalidItemId_Exception {
+    	List<ItemView> items = mediatorClient.getItems("ABBA");
+    	assertEquals(0,items.size());
+    }
+    
+    @Test
+    public void lowercaseNotExists() throws InvalidItemId_Exception {
+    	// product identifiers are case sensitive,
+    	// so "x1" is not the same as "X1"
+    	List<ItemView> items = mediatorClient.getItems("x1");
+    	assertEquals(0,items.size());
+    }
+
 }
