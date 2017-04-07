@@ -45,7 +45,7 @@ public class SupplierClient implements SupplierPortType {
 	}
 
 	/** output option **/
-	private boolean verbose = true;
+	private boolean verbose = false;
 	
 	
 
@@ -72,32 +72,6 @@ public class SupplierClient implements SupplierPortType {
 			throw new NullPointerException("Web Service Name cannot be null!");
 		this.wsName = wsName;
 		
-//		UDDINaming uddiNaming;
-//		
-//		System.out.printf("Contacting UDDI at %s%n", uddiURL);
-//		try{
-//			uddiNaming = new UDDINaming(uddiURL);
-//		}
-//		catch(UDDINamingException e){
-//			System.out.println("Could not find UDDI Server");
-//			return;
-//		}
-//		
-//		System.out.printf("Looking for '%s'%n", wsName);
-//		try{
-//			wsURL = uddiNaming.lookup(wsName);
-//		}
-//		catch(UDDINamingException e){
-//			System.out.printf("Could not find service %s%n", wsName);
-//			return;
-//		}
-//		if (wsURL == null) {
-//			System.out.println("Not found!");
-//			return;
-//		} else {
-//			System.out.printf("Found %s%n", wsURL);
-//		}
-//		
 		uddiLookup();
 		createStub();
 		

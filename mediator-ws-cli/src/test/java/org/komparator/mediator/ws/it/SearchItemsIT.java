@@ -131,4 +131,10 @@ public class SearchItemsIT extends BaseIT {
     	List<ItemView> items = mediatorClient.searchItems("sdfg");
     	assertEquals(0,items.size());
     }
+    
+    @Test
+    public void noProductsMatchUpperCase() throws InvalidText_Exception {
+    	List<ItemView> items = mediatorClient.searchItems("BaLL");
+    	assertEquals(0,items.size());
+    }
 }
