@@ -30,9 +30,6 @@ public class AddToCartIT extends BaseIT {
 		
 		// clear remote service state before all tests
 
-		// fill-in test products
-		// (since getProduct is read-only the initialization below
-		// can be done once for all tests in this suite)
 		{
 			ProductView product = new ProductView();
 			product.setId("X1");

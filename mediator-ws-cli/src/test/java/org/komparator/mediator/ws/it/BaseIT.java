@@ -50,9 +50,7 @@ public class BaseIT {
 
 	@AfterClass
 	public static void cleanup() {
-		supplierClients.get(0).clear();
-		supplierClients.get(1).clear();
-		supplierClients.get(2).clear();
+		mediatorClient.clear();
 		supplierClients.clear();
 	}
 

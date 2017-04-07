@@ -58,8 +58,6 @@ public class MediatorPortImpl implements MediatorPortType{
 		
 		List<SupplierClient> supClientList = getSupplierClients(getSuppliers());
 		
-		System.out.println("FOUND THIS NUMBER OF SUPPLIERS : " + supClientList.size());
-    	
     	List<ItemView> itemList = new ArrayList<ItemView>();
     	for(SupplierClient client : supClientList){
     		try{
@@ -257,9 +255,49 @@ public class MediatorPortImpl implements MediatorPortType{
     
 	// Auxiliary operations --------------------------------------------------	
 	
+	@Override
+    public String ping(String arg0){
+    	
+    	Collection<UDDIRecord> suppliers=getSuppliers();
+    	List<SupplierClient> supClientList = getSupplierClients(suppliers);
+    	String result = "";
+    	for(SupplierClient client : supClientList){
+    		result+=client.ping(arg0)+ "\n";
+    	}
+    	
+    	return result;
+    }
+
+	@Override
+	public void clear() {
+		
+		List<SupplierClient> supClientList = getSupplierClients(getSuppliers());
+		for(SupplierClient client : supClientList){
+			client.clear();
+		}
+		
+		carts.clear();
+		shoppingResults.clear();
+		NumberOfBoughtCarts=0;
+	}
+
+	@Override
+	public List<CartView> listCarts() {
+		return carts;
+	}
+		
+
+	@Override
+	public List<ShoppingResultView> shopHistory() {
+		return shoppingResults;
+	}
+	
+	
+	// General Helpers -------------------------------------------------------
+	
 	public String getCreditCard(){
 		String cc;
-    	//É para fazer try catch ou throws? !!!!!!!!!!!!!!!!!!! TODO
+    	
     	try{
     		cc = endpointManager.getUddiNaming().lookup("CreditCard");
     	}
@@ -267,9 +305,6 @@ public class MediatorPortImpl implements MediatorPortType{
     		System.out.println("Could not find Credit Card");
     		return null;
     	}
-    	
-    	
-    	
     	
     	return cc;
 	} 
@@ -290,7 +325,7 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	public Collection<UDDIRecord> getSuppliers(){
 		Collection<UDDIRecord> suppliers;
-    	//É para fazer try catch ou throws? !!!!!!!!!!!!!!!!!!! TODO
+    	
     	try{
     		suppliers = endpointManager.getUddiNaming().listRecords("A68_Supplier%");
     	}
@@ -333,47 +368,7 @@ public class MediatorPortImpl implements MediatorPortType{
     	return client;
     	
 	}
-	
-	@Override
-    public String ping(String arg0){
-    	
-    	Collection<UDDIRecord> suppliers=getSuppliers();
-    	List<SupplierClient> supClientList = getSupplierClients(suppliers);
-    	String result = "";
-    	for(SupplierClient client : supClientList){
-    		result+=client.ping(arg0)+ "\n";
-    	}
-    	
-    	return result;
-    }
 
-	@Override
-	public void clear() {
-		
-		List<SupplierClient> supClientList = getSupplierClients(getSuppliers());
-		for(SupplierClient client : supClientList){
-			client.clear();
-		}
-		
-		carts.clear();
-		shoppingResults.clear();
-		NumberOfBoughtCarts=0;
-	}
-
-	@Override
-	public List<CartView> listCarts() {
-		return carts;
-	}
-		
-
-	@Override
-	public List<ShoppingResultView> shopHistory() {
-		return shoppingResults;
-	}
-
-	
-	// View helpers -----------------------------------------------------
-	
 	class ItemPriceComparator implements Comparator<ItemView> {
 	    @Override
 	    public int compare(ItemView a, ItemView b) {
@@ -398,6 +393,8 @@ public class MediatorPortImpl implements MediatorPortType{
 	    	}
 	    }
 	}
+	
+	// View helpers -----------------------------------------------------
 	
 	public ItemView createItemView(ProductView product, SupplierClient client ){
 		ItemView item = new ItemView();
@@ -441,7 +438,9 @@ public class MediatorPortImpl implements MediatorPortType{
 		
 	}
 	
+	
 	// Exception helpers -----------------------------------------------------
+	
 	private void throwInvalidItemId(final String message) throws InvalidItemId_Exception {
 		InvalidItemId faultInfo = new InvalidItemId();
 		faultInfo.message = message;
@@ -483,6 +482,5 @@ public class MediatorPortImpl implements MediatorPortType{
 		faultInfo.message = message;
 		throw new EmptyCart_Exception(message, faultInfo);
 	}
-	
 	
 }
