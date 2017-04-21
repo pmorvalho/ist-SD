@@ -111,7 +111,8 @@ public class MediatorPortImpl implements MediatorPortType{
 		
 		if( cartId == null || !checkId(cartId.trim()) ) throwInvalidCartId("Cart ID is incorrect, failed.");
 				
-		if( itemId == null || !checkId(itemId.getProductId().trim()) || getItems(itemId.getProductId()).isEmpty())  throwInvalidItemId("Item ID is incorrect, failed.");
+		if( itemId == null || itemId.getProductId() == null || !checkId(itemId.getProductId().trim()) || getItems(itemId.getProductId()).isEmpty())  
+			throwInvalidItemId("Item ID is incorrect, failed.");
 		
 		if( itemQty <= 0 ) throwInvalidQuantity("Quantity is invalid, failed.");
 
@@ -172,10 +173,6 @@ public class MediatorPortImpl implements MediatorPortType{
 		
 		if( cartId==null || !checkId(cartId.trim()) ) throwInvalidCartId("Cart ID is incorrect, failed.");
 		
-		CreditCardClient ccClient = getCreditCardClient(getCreditCard());
-		if(!ccClient.validateNumber(creditCardNr)){
-			throwInvalidCreditCard("Invalid Credit Card, could not validate number, failed");
-		}
 		//Still have to add price, result and define purchased and dropped items, since we don't know them yet
 		//Set ID
 		NumberOfBoughtCarts++;
@@ -231,6 +228,12 @@ public class MediatorPortImpl implements MediatorPortType{
 			if(!foundCart){
 				throwInvalidCartId("Could not find cart, failed");
 			}
+
+			CreditCardClient ccClient = getCreditCardClient(getCreditCard());
+			if(!ccClient.validateNumber(creditCardNr)){
+				throwInvalidCreditCard("Invalid Credit Card, could not validate number, failed");
+			}
+			
 			//set dropped items
 			for(CartItemView civ : allItems){
 				if(!shoppingResult.getPurchasedItems().contains(civ)){
