@@ -1,8 +1,13 @@
 <handler-chains xmlns="http://java.sun.com/xml/ns/javaee">
     <handler-chain>
         <handler>
-            <handler-class>example.ws.handler.LoggingHandler</handler-class>
-        </handler>
-        <!-- Temos de ter o logging handler no início e do fim TODO -->
+			<handler-class>org.komparator.security.handler.LoggingHandler</handler-class>
+		</handler>
+		<handler>
+			<handler-class>org.komparator.security.handler.DateHandler</handler-class>
+		</handler>
+		<handler>
+			<handler-class>org.komparator.security.handler.LoggingHandler</handler-class>
+		</handler>
     </handler-chain>
 </handler-chains>
