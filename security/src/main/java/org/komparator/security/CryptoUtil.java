@@ -1,9 +1,14 @@
 package org.komparator.security;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -13,6 +18,10 @@ import javax.crypto.NoSuchPaddingException;
 public class CryptoUtil {
 	
 	private static final String ASYM_CIPHER = "RSA/ECB/PKCS1Padding";
+	
+	private static final String SIGNATURE_ALGO = "SHA256withRSA";
+	
+	private static final String PASSWORD = "peBiX6UK";
 	
 	//Este throws e inapropriado, mas eh o que Eles fazem nos testes TODO
 	public static byte[] asymCipher(byte[] plainBytes, PublicKey key) throws BadPaddingException {
@@ -64,6 +73,25 @@ public class CryptoUtil {
 		//IllegalBlockSizeException, BadPaddingException
 		
 		return decipheredBytes;
+	}
+	
+//	A68_Supplier1 - a68_supplier1
+//	A68_Mediator - a68_Mediator
+	
+	public static byte[] makeSignature(byte[] plainBytes , String alias, String keyStore )
+			throws UnrecoverableKeyException, FileNotFoundException, KeyStoreException {
+		
+		PrivateKey privateKey = CertUtil.getPrivateKeyFromKeyStoreResource(keyStore,
+				PASSWORD.toCharArray(), alias, PASSWORD.toCharArray());
+		byte[] digitalSignature = CertUtil.makeDigitalSignature(SIGNATURE_ALGO, privateKey, plainBytes);
+		
+		return digitalSignature;
+	}
+	
+	public static boolean verifySignature(byte[] plainBytes, String certName, byte[] digitalSignature) throws CertificateException, IOException {
+		PublicKey publicKey = CertUtil.getX509CertificateFromResource("asd").getPublicKey();
+		boolean result = CertUtil.verifyDigitalSignature(SIGNATURE_ALGO, publicKey, plainBytes, digitalSignature);
+		return true;
 	}
 
 }
