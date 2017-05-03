@@ -8,6 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 
 import javax.crypto.BadPaddingException;
@@ -15,13 +16,24 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+import pt.ulisboa.tecnico.sdis.ws.cli.CAClient;
+import pt.ulisboa.tecnico.sdis.ws.cli.CAClientException;
+
 public class CryptoUtil {
 	
+	private static final String CA_WS_NAME = "CA";
+
+	private static final String UDDI_URL = "http://a68:peBiX6UK@uddi.sd.rnl.tecnico.ulisboa.pt:9090/";
+
+	private static final String CA_URL = "http://sec.sd.rnl.tecnico.ulisboa.pt:8081/ca";
+
 	private static final String ASYM_CIPHER = "RSA/ECB/PKCS1Padding";
 	
 	private static final String SIGNATURE_ALGO = "SHA256withRSA";
 	
 	private static final String PASSWORD = "peBiX6UK";
+	
+	//private static Map<String,Certificate> certs = new HashMap<String,Certificate>();
 	
 	//Este throws e inapropriado, mas eh o que Eles fazem nos testes TODO
 	public static byte[] asymCipher(byte[] plainBytes, PublicKey key) throws BadPaddingException {
@@ -83,15 +95,23 @@ public class CryptoUtil {
 		
 		PrivateKey privateKey = CertUtil.getPrivateKeyFromKeyStoreResource(keyStore,
 				PASSWORD.toCharArray(), alias, PASSWORD.toCharArray());
-		byte[] digitalSignature = CertUtil.makeDigitalSignature(SIGNATURE_ALGO, privateKey, plainBytes);
 		
-		return digitalSignature;
+		return CertUtil.makeDigitalSignature(SIGNATURE_ALGO, privateKey, plainBytes);
 	}
 	
-	public static boolean verifySignature(byte[] plainBytes, String certName, byte[] digitalSignature) throws CertificateException, IOException {
-		PublicKey publicKey = CertUtil.getX509CertificateFromResource("asd").getPublicKey();
-		boolean result = CertUtil.verifyDigitalSignature(SIGNATURE_ALGO, publicKey, plainBytes, digitalSignature);
-		return true;
+	public static boolean verifySignature(byte[] plainBytes, String certName, byte[] digitalSignature) 
+			throws CertificateException, IOException, CAClientException {
+		
+		//PublicKey publicKey = CertUtil.getX509CertificateFromResource("asd").getPublicKey();
+		CAClient ca = new CAClient(CA_URL);
+		
+		//CAClient ca = new CAClient(UDDI_URL,CA_WS_NAME);
+		
+		Certificate cert = CertUtil.getX509CertificateFromPEMString(ca.getCertificate(certName));
+		
+		PublicKey publicKey = cert.getPublicKey();
+		
+		return CertUtil.verifyDigitalSignature(SIGNATURE_ALGO, publicKey, plainBytes, digitalSignature);
 	}
 
 }

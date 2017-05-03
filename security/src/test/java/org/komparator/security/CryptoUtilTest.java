@@ -1,6 +1,7 @@
 package org.komparator.security;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,6 +28,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import pt.ulisboa.tecnico.sdis.ws.cli.CAClientException;
+
 import static javax.xml.bind.DatatypeConverter.printHexBinary;
 import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 
@@ -47,7 +50,6 @@ public class CryptoUtilTest {
 	 * Asymmetric cipher: combination of algorithm, block processing, and
 	 * padding.
 	 */
-	private static final String ASYM_CIPHER = "RSA/ECB/PKCS1Padding";
 	
 	private static final String CERT = "example.cer";
 	private static final String KEYSTORE = "example.jks";
@@ -72,23 +74,23 @@ public class CryptoUtilTest {
         privateKey = keyPair.getPrivate();
     }
 
-    @AfterClass
-    public static void oneTimeTearDown() {
-        // runs once after all tests in the suite
-    }
-
-    // members
-
-    // initialization and clean-up for each test
-    @Before
-    public void setUp() {
-
-    }
-
-    @After
-    public void tearDown() {
-        // runs after each test
-    }
+//    @AfterClass
+//    public static void oneTimeTearDown() {
+//        // runs once after all tests in the suite
+//    }
+//
+//    // members
+//
+//    // initialization and clean-up for each test
+//    @Before
+//    public void setUp() {
+//
+//    }
+//
+//    @After
+//    public void tearDown() {
+//        // runs after each test
+//    }
 
     // tests, estes throws sao inapropriados TODO
     @Test
@@ -145,6 +147,17 @@ public class CryptoUtilTest {
 		System.out.println("Deciphered text: " + new String(deciphered));
     	
     	assertEquals(new String(plainBytes),new String(deciphered));
+    }
+    
+    @Test
+    public void successSignature() 
+    		throws UnrecoverableKeyException, KeyStoreException, CertificateException, IOException, CAClientException {
+    	
+    	byte[] signature = CryptoUtil.makeSignature(plainBytes, "a68_mediator", "A68_Mediator.jks");
+    	
+    	boolean res = CryptoUtil.verifySignature(plainBytes, "A68_Mediator", signature);
+    	
+    	assertTrue(res);
     }
 
 }
