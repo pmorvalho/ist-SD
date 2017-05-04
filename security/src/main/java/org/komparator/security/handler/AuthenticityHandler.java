@@ -4,6 +4,7 @@ import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
 import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -11,6 +12,7 @@ import javax.xml.namespace.QName;
 import javax.xml.soap.Name;
 import javax.xml.soap.SOAPElement;
 import javax.xml.soap.SOAPEnvelope;
+import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPHeader;
 import javax.xml.soap.SOAPHeaderElement;
 import javax.xml.soap.SOAPMessage;
@@ -61,8 +63,9 @@ public class AuthenticityHandler implements SOAPHandler<SOAPMessageContext>{
 
 				// add header
 				SOAPHeader sh = se.getHeader();
-				if (sh == null)
-					sh = se.addHeader();
+				if (sh == null){
+					throw new RuntimeException();
+				}
 				
 				String wsName = KomparatorSecurityManager.getWsName();
 				
@@ -73,9 +76,8 @@ public class AuthenticityHandler implements SOAPHandler<SOAPMessageContext>{
 				// add header element wsName
 				element.addTextNode(wsName);
 				msg.saveChanges();
-				ByteArrayOutputStream out = new ByteArrayOutputStream();
-				msg.writeTo(out);
-				byte[] byteMsg = out.toByteArray();
+				
+				byte[] byteMsg = soapMessageToBytes(msg);
 
 				byte[] signature = CryptoUtil.makeSignature(byteMsg, wsName.toLowerCase(), wsName+".jks");
 								
@@ -98,8 +100,9 @@ public class AuthenticityHandler implements SOAPHandler<SOAPMessageContext>{
 
 				// add header
 				SOAPHeader sh = se.getHeader();
-				if (sh == null)
-					sh = se.addHeader();
+				if (sh == null){
+					throw new RuntimeException();
+				}
 				
 				// get first header element signature
 				Name name = se.createName("signature", "l", "http://lmao");
@@ -122,13 +125,13 @@ public class AuthenticityHandler implements SOAPHandler<SOAPMessageContext>{
 					System.out.println("Header element wsName not found.");
 					return true;
 				}
+				
 				SOAPElement wsNameElement = (SOAPElement) it.next();
 				
 				String wsName = wsNameElement.getValue();
 								
-				ByteArrayOutputStream out = new ByteArrayOutputStream();
-				msg.writeTo(out);
-				byte[] byteMsg = out.toByteArray();
+				byte[] byteMsg = soapMessageToBytes(msg);
+				
 				byte[] signatureBytes = parseBase64Binary(signature.getValue());
 								
 				if(!CryptoUtil.verifySignature(byteMsg, wsName, signatureBytes)){
@@ -164,5 +167,11 @@ public class AuthenticityHandler implements SOAPHandler<SOAPMessageContext>{
 	@Override
 	public void close(MessageContext messageContext) {
 		// nothing to clean up
+	}
+	
+	public byte[] soapMessageToBytes(SOAPMessage msg) throws SOAPException, IOException{
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		msg.writeTo(out);
+		return out.toByteArray();
 	}
 }

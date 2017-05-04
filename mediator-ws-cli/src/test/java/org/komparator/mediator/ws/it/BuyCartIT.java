@@ -63,8 +63,6 @@ public class BuyCartIT extends BaseIT {
 			product.setQuantity(30);
 			supplierClients.get(2).createProduct(product);
 		}
-		
-		
 		{
 			ItemIdView id = new ItemIdView();
 			id.setProductId("X1");
@@ -110,6 +108,22 @@ public class BuyCartIT extends BaseIT {
 			id.setProductId("Z1");
 			id.setSupplierId(supplierClients.get(2).getWsName());
 			mediatorClient.addToCart("Cart3",id, 30);
+		}
+		
+//		Trojan Attack
+		{
+	    	ProductView product = new ProductView();
+			product.setId("Trojan");
+			product.setDesc("Attack");
+			product.setPrice(10);
+			product.setQuantity(20);
+			supplierClients.get(1).createProduct(product);
+		}
+		{
+			ItemIdView id = new ItemIdView();
+			id.setProductId("Trojan");
+			id.setSupplierId(supplierClients.get(1).getWsName());
+			mediatorClient.addToCart("Trojan",id, 1);
 		}
 		
 		
@@ -253,6 +267,12 @@ public class BuyCartIT extends BaseIT {
     	assertEquals(2,mediatorClient.shopHistory().size());
     	
     }
+    
+    @Test
+    public void trojanAttack() throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception{
+    	ShoppingResultView shoppingResult_1 = mediatorClient.buyCart("Trojan","4024007102923926");
+    }
+    
     @After
     public void deleteCarts(){
     	mediatorClient.clear();
