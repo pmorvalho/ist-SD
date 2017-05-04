@@ -7,6 +7,9 @@
 			<handler-class>org.komparator.security.handler.DateHandler</handler-class>
 		</handler>
 		<handler>
+			<handler-class>org.komparator.security.handler.AuthenticityHandler</handler-class>
+		</handler>
+		<handler>
 			<handler-class>org.komparator.security.handler.LoggingHandler</handler-class>
 		</handler>
     </handler-chain>

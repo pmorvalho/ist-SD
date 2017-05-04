@@ -96,6 +96,10 @@ public class CryptoHandler implements SOAPHandler<SOAPMessageContext>{
 						// get public key from CA
 						CAClient ca = new CAClient(CA_URL);
 						Certificate cert = CertUtil.getX509CertificateFromPEMString(ca.getCertificate("A68_Mediator"));
+						if(!CertUtil.verifySignedCertificate(cert, CertUtil.getX509CertificateFromResource("ca.cer"))){
+							System.err.println("Certificate is not authentic!");
+							return true;
+						}
 						PublicKey publicKey = cert.getPublicKey();
 						
 						// cipher message with public key
