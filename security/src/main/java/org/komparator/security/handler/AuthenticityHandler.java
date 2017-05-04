@@ -147,7 +147,7 @@ public class AuthenticityHandler implements SOAPHandler<SOAPMessageContext>{
 		catch(Exception e){
 			System.out.print("Caught exception in handleMessage: ");
 			System.out.println(e);
-			System.out.println("Continue normal processing...");
+			throw new RuntimeException();
 		}
 
 		return true;

@@ -2,7 +2,6 @@ package org.komparator.security.handler;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.cert.Certificate;
 import java.util.Set;
 
 import javax.xml.namespace.QName;
@@ -23,8 +22,6 @@ import org.w3c.dom.NodeList;
 import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
 
-import pt.ulisboa.tecnico.sdis.ws.cli.CAClient;
-
 public class CryptoHandler implements SOAPHandler<SOAPMessageContext>{
 	private static final String ALIAS = "a68_mediator";
 
@@ -34,8 +31,6 @@ public class CryptoHandler implements SOAPHandler<SOAPMessageContext>{
 
 	public static final String CONTEXT_PROPERTY = "my.property";
 	
-	private static final String CA_URL = "http://sec.sd.rnl.tecnico.ulisboa.pt:8081/ca";
-
 	//
 	// Handler interface implementation
 	//
@@ -74,7 +69,6 @@ public class CryptoHandler implements SOAPHandler<SOAPMessageContext>{
 				if (sh == null)
 					sh = se.addHeader();
 				
-				//QName svcn = (QName) smc.get(MessageContext.WSDL_SERVICE);
 				QName opn = (QName) smc.get(MessageContext.WSDL_OPERATION);
 				
 				if (!opn.getLocalPart().equals("buyCart")) {
@@ -94,13 +88,13 @@ public class CryptoHandler implements SOAPHandler<SOAPMessageContext>{
 						String secretArgument = argument.getTextContent();
 						
 						// get public key from CA
-						CAClient ca = new CAClient(CA_URL);
-						Certificate cert = CertUtil.getX509CertificateFromPEMString(ca.getCertificate("A68_Mediator"));
-						if(!CertUtil.verifySignedCertificate(cert, CertUtil.getX509CertificateFromResource("ca.cer"))){
-							System.err.println("Certificate is not authentic!");
-							return true;
+						PublicKey publicKey;
+						try {
+							publicKey = CryptoUtil.getPublicKeyFromCA("A68_Mediator");
+						} catch(SecurityException e) {
+							System.err.println("Could not verify Certificate's signature");
+							throw new RuntimeException();
 						}
-						PublicKey publicKey = cert.getPublicKey();
 						
 						// cipher message with public key
 						byte[] cipheredArgument = CryptoUtil.asymCipher(secretArgument.getBytes(), publicKey);
@@ -162,6 +156,8 @@ public class CryptoHandler implements SOAPHandler<SOAPMessageContext>{
 				}
 
 			}
+		} catch (RuntimeException e) {
+			throw e;
 		} catch (Exception e) {
 			System.out.print("Caught exception in handleMessage: ");
 			System.out.println(e);

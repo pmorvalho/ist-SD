@@ -57,7 +57,7 @@ public class DateHandler implements SOAPHandler<SOAPMessageContext> {
 
 		try {
 			if (outboundElement.booleanValue()) {
-				System.out.println("Writing header in outbound SOAP message...");
+				System.out.println("Writing date header in outbound SOAP message...");
 
 				// get SOAP envelope
 				SOAPMessage msg = smc.getMessage();
@@ -70,7 +70,7 @@ public class DateHandler implements SOAPHandler<SOAPMessageContext> {
 					sh = se.addHeader();
 				
 				// add header element (name, namespace prefix, namespace)
-				Name name = se.createName("myHeader", "l", "http://lmao");
+				Name name = se.createName("date", "l", "http://lmao");
 				SOAPHeaderElement element = sh.addHeaderElement(name);
 
 				// add header element value
@@ -79,7 +79,7 @@ public class DateHandler implements SOAPHandler<SOAPMessageContext> {
 				element.addTextNode(strDate);
 
 			} else {
-				System.out.println("Reading header in inbound SOAP message...");
+				System.out.println("Reading date header in inbound SOAP message...");
 
 				// get SOAP envelope header
 				SOAPMessage msg = smc.getMessage();
@@ -94,7 +94,7 @@ public class DateHandler implements SOAPHandler<SOAPMessageContext> {
 				}
 
 				// get first header element
-				Name name = se.createName("myHeader", "l", "http://lmao");
+				Name name = se.createName("date", "l", "http://lmao");
 				Iterator it = sh.getChildElements(name);
 				// check header element
 				if (!it.hasNext()) {
@@ -110,7 +110,7 @@ public class DateHandler implements SOAPHandler<SOAPMessageContext> {
 				Date actual = new Date();
 				if((actual.getTime()-value.getTime()) > 3000){ //3000 milisegundos = 3 segundos
 					System.out.println("Received SOAP message is not fresh!");
-					throw new java.lang.RuntimeException();
+					throw new RuntimeException();
 				}
 
 				// print received header
@@ -121,12 +121,12 @@ public class DateHandler implements SOAPHandler<SOAPMessageContext> {
 				// set property scope to application client/server class can
 				// access it
 				smc.setScope(CONTEXT_PROPERTY, Scope.APPLICATION);
-
 			}
+			
 		} catch (Exception e) {
 			System.out.print("Caught exception in handleMessage: ");
 			System.out.println(e);
-			System.out.println("Continue normal processing...");
+			throw new RuntimeException();
 		}
 
 		return true;

@@ -33,8 +33,6 @@ public class CryptoUtil {
 	
 	private static final String PASSWORD = "peBiX6UK";
 	
-	//private static Map<String,Certificate> certs = new HashMap<String,Certificate>();
-	
 	//Este throws e inapropriado, mas eh o que Eles fazem nos testes TODO
 	public static byte[] asymCipher(byte[] plainBytes, PublicKey key) throws BadPaddingException {
 			//throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
@@ -87,9 +85,6 @@ public class CryptoUtil {
 		return decipheredBytes;
 	}
 	
-//	A68_Supplier1 - a68_supplier1
-//	A68_Mediator - a68_Mediator
-	
 	public static byte[] makeSignature(byte[] plainBytes , String alias, String keyStore )
 			throws UnrecoverableKeyException, FileNotFoundException, KeyStoreException {
 		
@@ -100,18 +95,26 @@ public class CryptoUtil {
 	}
 	
 	public static boolean verifySignature(byte[] plainBytes, String certName, byte[] digitalSignature) 
-			throws CertificateException, IOException, CAClientException {
+			throws CertificateException, IOException, CAClientException, SecurityException {
 		
-		//PublicKey publicKey = CertUtil.getX509CertificateFromResource("asd").getPublicKey();
-		CAClient ca = new CAClient(CA_URL);
-		
-		//CAClient ca = new CAClient(UDDI_URL,CA_WS_NAME);
-		
-		Certificate cert = CertUtil.getX509CertificateFromPEMString(ca.getCertificate(certName));
-		
-		PublicKey publicKey = cert.getPublicKey();
+		PublicKey publicKey = getPublicKeyFromCA(certName);
 		
 		return CertUtil.verifyDigitalSignature(SIGNATURE_ALGO, publicKey, plainBytes, digitalSignature);
+	}
+	
+	public static PublicKey getPublicKeyFromCA(String certName) 
+			throws SecurityException, CAClientException, CertificateException, IOException {
+		
+		// get Certificate from CA
+		CAClient ca = new CAClient(CA_URL);
+		Certificate cert = CertUtil.getX509CertificateFromPEMString(ca.getCertificate(certName));
+		
+		if(!CertUtil.verifySignedCertificate(cert, CertUtil.getX509CertificateFromResource("ca.cer"))){
+			System.err.println("Certificate is not authentic!");
+			throw new SecurityException("Certificate is not authentic!");
+		}
+		
+		return cert.getPublicKey();
 	}
 
 }

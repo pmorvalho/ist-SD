@@ -151,7 +151,7 @@ public class CryptoUtilTest {
     
     @Test
     public void successSignature() 
-    		throws UnrecoverableKeyException, KeyStoreException, CertificateException, IOException, CAClientException {
+    		throws UnrecoverableKeyException, KeyStoreException, CertificateException, IOException, CAClientException, SecurityException {
     	
     	byte[] signature = CryptoUtil.makeSignature(plainBytes, "a68_mediator", "A68_Mediator.jks");
     	
