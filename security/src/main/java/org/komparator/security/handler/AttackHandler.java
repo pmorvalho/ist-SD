@@ -45,14 +45,12 @@ public class AttackHandler implements SOAPHandler<SOAPMessageContext>{
 		Boolean outboundElement = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
 
 		try {
-			if (outboundElement.booleanValue()) {
+			if (!outboundElement.booleanValue()) {
 
 				return true;
 
 			}
-			else {
-				System.out.println("Looking for credit card number in inbound SOAP message...");
-				
+			else {				
 				// get SOAP envelope
 				SOAPMessage msg = smc.getMessage();
 				SOAPPart sp = msg.getSOAPPart();
