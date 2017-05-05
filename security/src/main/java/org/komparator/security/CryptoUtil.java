@@ -20,10 +20,6 @@ import pt.ulisboa.tecnico.sdis.ws.cli.CAClient;
 import pt.ulisboa.tecnico.sdis.ws.cli.CAClientException;
 
 public class CryptoUtil {
-	
-	private static final String CA_WS_NAME = "CA";
-
-	private static final String UDDI_URL = "http://a68:peBiX6UK@uddi.sd.rnl.tecnico.ulisboa.pt:9090/";
 
 	private static final String CA_URL = "http://sec.sd.rnl.tecnico.ulisboa.pt:8081/ca";
 
@@ -34,38 +30,21 @@ public class CryptoUtil {
 	private static final String PASSWORD = "peBiX6UK";
 	
 	//Este throws e inapropriado, mas eh o que Eles fazem nos testes TODO
-	public static byte[] asymCipher(byte[] plainBytes, PublicKey key) throws BadPaddingException {
-			//throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+	public static byte[] asymCipher(byte[] plainBytes, PublicKey key) 
+			throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		
-		Cipher cipher;
-		try {
-			cipher = Cipher.getInstance(ASYM_CIPHER);
-		} catch (NoSuchAlgorithmException e) {
-			System.err.println("No Such Algorithm");
-			return null;
-		} catch (NoSuchPaddingException e) {
-			System.err.println("No Such Padding");
-			return null;
-		}
+		Cipher cipher = Cipher.getInstance(ASYM_CIPHER);
+		
 		//NoSuchAlgorithmException, NoSuchPaddingException
 		
-		try {
-			cipher.init(Cipher.ENCRYPT_MODE, key);
-		} catch (InvalidKeyException e) {
-			System.err.println("Invalid Key");
-			return null;
-		}
-		//InvalidKeyException
+		
+		cipher.init(Cipher.ENCRYPT_MODE, key);
+		
+		
 		
 		byte[] cipherBytes = null;
-		try {
+
 			cipherBytes = cipher.doFinal(plainBytes);
-		} catch (IllegalBlockSizeException e) {
-			System.err.println("Illegal Block Size");
-//		} catch (BadPaddingException e) {
-//			System.err.println("Bad Padding");
-		}
-		//IllegalBlockSizeException, BadPaddingException
 		
 		return cipherBytes;
 	} 
@@ -88,14 +67,14 @@ public class CryptoUtil {
 	public static byte[] makeSignature(byte[] plainBytes , String alias, String keyStore )
 			throws UnrecoverableKeyException, FileNotFoundException, KeyStoreException {
 		
-		PrivateKey privateKey = CertUtil.getPrivateKeyFromKeyStoreResource(keyStore,
+		PrivateKey privateKey = CertUtil.getPrivateKeyFromKeyStoreFile(keyStore,
 				PASSWORD.toCharArray(), alias, PASSWORD.toCharArray());
 		
 		return CertUtil.makeDigitalSignature(SIGNATURE_ALGO, privateKey, plainBytes);
 	}
 	
 	public static boolean verifySignature(byte[] plainBytes, String certName, byte[] digitalSignature) 
-			throws CertificateException, IOException, CAClientException, SecurityException {
+			throws CertificateException, IOException, CAClientException, KomparatorSecurityException {
 		
 		PublicKey publicKey = getPublicKeyFromCA(certName);
 		
@@ -103,7 +82,7 @@ public class CryptoUtil {
 	}
 	
 	public static PublicKey getPublicKeyFromCA(String certName) 
-			throws SecurityException, CAClientException, CertificateException, IOException {
+			throws KomparatorSecurityException, CAClientException, CertificateException, IOException {
 		
 		// get Certificate from CA
 		CAClient ca = new CAClient(CA_URL);
@@ -111,7 +90,7 @@ public class CryptoUtil {
 		
 		if(!CertUtil.verifySignedCertificate(cert, CertUtil.getX509CertificateFromResource("ca.cer"))){
 			System.err.println("Certificate is not authentic!");
-			throw new SecurityException("Certificate is not authentic!");
+			throw new KomparatorSecurityException("Certificate is not authentic!");
 		}
 		
 		return cert.getPublicKey();
