@@ -27,8 +27,12 @@ public class BaseIT {
 			throw e;
 		}
 
-		String wsURL = testProps.getProperty("ws.url");
-		client = new SupplierClient(wsURL);
+//		String wsURL = testProps.getProperty("ws.url");
+//		client = new SupplierClient(wsURL);
+		
+		String uddiURL = testProps.getProperty("uddi.url");
+		String wsName = testProps.getProperty("ws.name");
+		client = new SupplierClient(uddiURL,wsName);
 		// CLIENT.setVerbose(true);
 	}
 

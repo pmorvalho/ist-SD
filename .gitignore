@@ -16,6 +16,7 @@ hs_err_pid*
 .project
 .settings/
 bin/
+.metadata/
 
 # Mac
 .DS_Store

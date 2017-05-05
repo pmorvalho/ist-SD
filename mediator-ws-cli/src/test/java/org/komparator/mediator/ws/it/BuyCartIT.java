@@ -63,8 +63,6 @@ public class BuyCartIT extends BaseIT {
 			product.setQuantity(30);
 			supplierClients.get(2).createProduct(product);
 		}
-		
-		
 		{
 			ItemIdView id = new ItemIdView();
 			id.setProductId("X1");
@@ -253,6 +251,8 @@ public class BuyCartIT extends BaseIT {
     	assertEquals(2,mediatorClient.shopHistory().size());
     	
     }
+    
+    
     @After
     public void deleteCarts(){
     	mediatorClient.clear();

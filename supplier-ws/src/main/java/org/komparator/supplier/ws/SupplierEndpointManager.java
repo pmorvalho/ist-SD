@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import javax.xml.ws.Endpoint;
 
+import org.komparator.security.KomparatorSecurityManager;
+
 import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINaming;
 
 
@@ -64,6 +66,7 @@ public class SupplierEndpointManager {
 			throw new NullPointerException("Web Service Name cannot be null!");
 		this.wsName = wsName;
 		
+		KomparatorSecurityManager.setWsName(wsName);
 		
 	}
 

@@ -52,6 +52,15 @@ public class GetProductIT extends BaseIT {
 			product.setQuantity(30);
 			client.createProduct(product);
 		}
+		
+		{
+	    	ProductView product = new ProductView();
+			product.setId("Trojan");
+			product.setDesc("Attack");
+			product.setPrice(10);
+			product.setQuantity(20);
+			client.createProduct(product);
+		}
 	}
 
 	@AfterClass
@@ -146,6 +155,11 @@ public class GetProductIT extends BaseIT {
 		// so "x1" is not the same as "X1"
 		ProductView product = client.getProduct("x1");
 		assertNull(product);
+	}
+	
+	@Test(expected=java.lang.RuntimeException.class)
+	public void attack() throws BadProductId_Exception{
+		client.getProduct("Trojan");
 	}
 
 }

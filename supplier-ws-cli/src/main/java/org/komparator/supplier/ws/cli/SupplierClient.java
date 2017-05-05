@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.xml.ws.BindingProvider;
 
+import org.komparator.security.KomparatorSecurityManager;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.BadProduct_Exception;
 import org.komparator.supplier.ws.BadQuantity_Exception;
@@ -60,6 +61,7 @@ public class SupplierClient implements SupplierPortType {
 	/** constructor with provided web service URL */
 	public SupplierClient(String wsURL) throws SupplierClientException {
 		this.wsURL = wsURL;
+		KomparatorSecurityManager.setWsName("A68_Mediator");
 		createStub();
 	}
 	/** constructor with provided UDDI url and WebService name in UDDI */
@@ -71,6 +73,8 @@ public class SupplierClient implements SupplierPortType {
 		if (wsName == null)
 			throw new NullPointerException("Web Service Name cannot be null!");
 		this.wsName = wsName;
+		
+		KomparatorSecurityManager.setWsName("A68_Mediator");
 		
 		uddiLookup();
 		createStub();
