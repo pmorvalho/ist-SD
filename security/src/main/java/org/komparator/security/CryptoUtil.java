@@ -67,7 +67,7 @@ public class CryptoUtil {
 	public static byte[] makeSignature(byte[] plainBytes , String alias, String keyStore )
 			throws UnrecoverableKeyException, FileNotFoundException, KeyStoreException {
 		
-		PrivateKey privateKey = CertUtil.getPrivateKeyFromKeyStoreFile(keyStore,
+		PrivateKey privateKey = CertUtil.getPrivateKeyFromKeyStoreResource(keyStore,
 				PASSWORD.toCharArray(), alias, PASSWORD.toCharArray());
 		
 		return CertUtil.makeDigitalSignature(SIGNATURE_ALGO, privateKey, plainBytes);
