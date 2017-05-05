@@ -29,22 +29,16 @@ public class CryptoUtil {
 	
 	private static final String PASSWORD = "peBiX6UK";
 	
-	//Este throws e inapropriado, mas eh o que Eles fazem nos testes TODO
 	public static byte[] asymCipher(byte[] plainBytes, PublicKey key) 
 			throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 		
 		Cipher cipher = Cipher.getInstance(ASYM_CIPHER);
 		
-		//NoSuchAlgorithmException, NoSuchPaddingException
-		
-		
 		cipher.init(Cipher.ENCRYPT_MODE, key);
-		
-		
 		
 		byte[] cipherBytes = null;
 
-			cipherBytes = cipher.doFinal(plainBytes);
+		cipherBytes = cipher.doFinal(plainBytes);
 		
 		return cipherBytes;
 	} 
@@ -53,13 +47,10 @@ public class CryptoUtil {
 			throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException{
 		
 		Cipher cipher = Cipher.getInstance(ASYM_CIPHER);
-		//NoSuchAlgorithmException, NoSuchPaddingException
 		
 		cipher.init(Cipher.DECRYPT_MODE, key);
-		//InvalidKeyException
 		
 		byte[] decipheredBytes = cipher.doFinal(cipheredBytes);
-		//IllegalBlockSizeException, BadPaddingException
 		
 		return decipheredBytes;
 	}

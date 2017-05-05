@@ -27,6 +27,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.komparator.security.CertUtil;
+import org.komparator.security.CryptoUtil;
+import org.komparator.security.KomparatorSecurityException;
 
 import pt.ulisboa.tecnico.sdis.ws.cli.CAClientException;
 
@@ -73,24 +76,6 @@ public class CryptoUtilTest {
         publicKey = keyPair.getPublic();
         privateKey = keyPair.getPrivate();
     }
-
-//    @AfterClass
-//    public static void oneTimeTearDown() {
-//        // runs once after all tests in the suite
-//    }
-//
-//    // members
-//
-//    // initialization and clean-up for each test
-//    @Before
-//    public void setUp() {
-//
-//    }
-//
-//    @After
-//    public void tearDown() {
-//        // runs after each test
-//    }
 
     // tests, estes throws sao inapropriados TODO
     @Test
@@ -149,15 +134,15 @@ public class CryptoUtilTest {
     	assertEquals(new String(plainBytes),new String(deciphered));
     }
     
-//    @Test
-//    public void successSignature() 
-//    		throws UnrecoverableKeyException, KeyStoreException, CertificateException, IOException, CAClientException, KomparatorSecurityException {
-//    	
-//    	byte[] signature = CryptoUtil.makeSignature(plainBytes, "a68_mediator", "A68_Mediator.jks");
-//    	
-//    	boolean res = CryptoUtil.verifySignature(plainBytes, "A68_Mediator", signature);
-//    	
-//    	assertTrue(res);
-//    }
+    @Test
+    public void successSignature() 
+    		throws UnrecoverableKeyException, KeyStoreException, CertificateException, IOException, CAClientException, KomparatorSecurityException {
+    	
+    	byte[] signature = CryptoUtil.makeSignature(plainBytes, "a68_mediator", "A68_Mediator.jks");
+    	
+    	boolean res = CryptoUtil.verifySignature(plainBytes, "A68_Mediator", signature);
+    	
+    	assertTrue(res);
+    }
 
 }
