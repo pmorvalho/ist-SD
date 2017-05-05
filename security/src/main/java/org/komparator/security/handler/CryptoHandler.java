@@ -177,8 +177,6 @@ public class CryptoHandler implements SOAPHandler<SOAPMessageContext>{
 				throw new RuntimeException("BadPadding Exception caught in CryptoHandler: " + e);
 			} catch(InvalidKeyException e){
 				throw new RuntimeException("InvalidKey Exception caught in CryptoHandler: " + e);
-			} catch (RuntimeException e){
-				throw e;
 			}
 			
 		return true;
@@ -199,6 +197,9 @@ public class CryptoHandler implements SOAPHandler<SOAPMessageContext>{
 	public void close(MessageContext messageContext) {
 		// nothing to clean up
 	}
+	
+	
+	// aux methods
 	
 	private void cipherCreditCardNumber(Node argument) throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CertificateException, KomparatorSecurityException, CAClientException, IOException{
 		
