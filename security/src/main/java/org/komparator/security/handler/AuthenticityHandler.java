@@ -5,6 +5,9 @@ import static javax.xml.bind.DatatypeConverter.printBase64Binary;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -22,8 +25,11 @@ import javax.xml.ws.handler.soap.SOAPHandler;
 import javax.xml.ws.handler.soap.SOAPMessageContext;
 
 import org.komparator.security.CryptoUtil;
+import org.komparator.security.KomparatorSecurityException;
 import org.komparator.security.KomparatorSecurityManager;
-import java.lang.RuntimeException;
+import org.w3c.dom.DOMException;
+
+import pt.ulisboa.tecnico.sdis.ws.cli.CAClientException;
 
 public class AuthenticityHandler implements SOAPHandler<SOAPMessageContext>{
 
@@ -52,103 +58,101 @@ public class AuthenticityHandler implements SOAPHandler<SOAPMessageContext>{
 
 		Boolean outboundElement = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
 
-		try {
-			if (outboundElement.booleanValue()) {
-				System.out.println("Signing outbound SOAP message...");
 
-				// get SOAP envelope
-				SOAPMessage msg = smc.getMessage();
-				SOAPPart sp = msg.getSOAPPart();
-				SOAPEnvelope se = sp.getEnvelope();
+			try {
+				if (outboundElement.booleanValue()) {
+					System.out.println("Signing outbound SOAP message...");
 
-				// add header
-				SOAPHeader sh = se.getHeader();
-				if (sh == null){
-					throw new RuntimeException();
+					// get SOAP envelope
+					SOAPMessage msg = smc.getMessage();
+					SOAPPart sp = msg.getSOAPPart();
+					SOAPEnvelope se = sp.getEnvelope();
+
+					// add header
+					SOAPHeader sh = se.getHeader();
+					if (sh == null){
+						throw new RuntimeException();
+					}
+					
+					String wsName = KomparatorSecurityManager.getWsName();
+					
+					// add header element wsName (name, namespace prefix, namespace)
+					Name name = se.createName("wsName", "l", "http://lmao");
+					SOAPHeaderElement element = sh.addHeaderElement(name);
+									
+					// add header element wsName
+					element.addTextNode(wsName);
+					msg.saveChanges();
+					
+					byte[] byteMsg = soapMessageToBytes(msg);
+
+					byte[] signature = CryptoUtil.makeSignature(byteMsg, wsName.toLowerCase(), wsName+".jks");
+									
+					// add header element signature (name, namespace prefix, namespace)
+					name = se.createName("signature", "l", "http://lmao");
+					element = sh.addHeaderElement(name);
+
+					// add header element value
+					element.addTextNode(printBase64Binary(signature));
+					
+
+				}
+				else {
+					System.out.println("Verifying signature in inbound SOAP message...");
+					
+					// get SOAP envelope
+					SOAPMessage msg = smc.getMessage();
+					SOAPPart sp = msg.getSOAPPart();
+					SOAPEnvelope se = sp.getEnvelope();
+
+					// add header
+					SOAPHeader sh = se.getHeader();
+					if (sh == null){
+						throw new RuntimeException();
+					}
+					
+					
+					SOAPElement signature = getSoapElement(se, sh, "signature");
+					
+					sh.removeChild(signature);
+					msg.saveChanges();
+					
+					SOAPElement wsNameElement = getSoapElement(se, sh, "wsName");
+					
+					String wsName = wsNameElement.getValue();
+									
+					byte[] byteMsg = soapMessageToBytes(msg);
+					
+					byte[] signatureBytes = parseBase64Binary(signature.getValue());
+									
+					if(!CryptoUtil.verifySignature(byteMsg, wsName, signatureBytes)){
+						System.err.println("Signature is not correct!");
+						throw new RuntimeException();
+					}
+					
+
 				}
 				
-				String wsName = KomparatorSecurityManager.getWsName();
-				
-				// add header element wsName (name, namespace prefix, namespace)
-				Name name = se.createName("wsName", "l", "http://lmao");
-				SOAPHeaderElement element = sh.addHeaderElement(name);
-								
-				// add header element wsName
-				element.addTextNode(wsName);
-				msg.saveChanges();
-				
-				byte[] byteMsg = soapMessageToBytes(msg);
-
-				byte[] signature = CryptoUtil.makeSignature(byteMsg, wsName.toLowerCase(), wsName+".jks");
-								
-				// add header element signature (name, namespace prefix, namespace)
-				name = se.createName("signature", "l", "http://lmao");
-				element = sh.addHeaderElement(name);
-
-				// add header element value
-				element.addTextNode(printBase64Binary(signature));
-				
-
+			} catch(UnrecoverableKeyException e){
+				throw new RuntimeException("UnrecoverableKey Exception caught in AuthenticityHandler: " + e);
+			} catch(KeyStoreException e){
+				throw new RuntimeException("KeyStore Exception caught in AuthenticityHandler: " + e);
+			} catch(CertificateException e){
+				throw new RuntimeException("Certificate Exception caught in AuthenticityHandler: " + e);
+			} catch(DOMException e){
+				throw new RuntimeException("DOM Exception caught in AuthenticityHandler: " + e);
+			} catch(SOAPException e){
+				throw new RuntimeException("SOAP Exception caught in AuthenticityHandler: " + e);
+			} catch(IOException e){
+		 		throw new RuntimeException("IO Exception caught in AuthenticityHandler: " + e);
+			} catch(CAClientException e){
+				throw new RuntimeException("CAClient Exception caught in AuthenticityHandler: " + e);
+			} catch(KomparatorSecurityException e){
+				throw new RuntimeException("KomparatorSecurity Exception caught in AuthenticityHandler: " + e);
+			} catch (RuntimeException e){
+				throw e;
 			}
-			else {
-				System.out.println("Verifying signature in inbound SOAP message...");
-				
-				// get SOAP envelope
-				SOAPMessage msg = smc.getMessage();
-				SOAPPart sp = msg.getSOAPPart();
-				SOAPEnvelope se = sp.getEnvelope();
 
-				// add header
-				SOAPHeader sh = se.getHeader();
-				if (sh == null){
-					throw new RuntimeException();
-				}
-				
-				// get first header element signature
-				Name name = se.createName("signature", "l", "http://lmao");
-				Iterator it = sh.getChildElements(name);
-				// check header element
-				if (!it.hasNext()) {
-					System.out.println("Header element signature not found.");
-					return true;
-				}
-				SOAPElement signature = (SOAPElement) it.next();
-				
-				sh.removeChild(signature);
-				msg.saveChanges();
-				
-				// get first header element wsName
-				name = se.createName("wsName", "l", "http://lmao");
-				it = sh.getChildElements(name);
-				// check header element
-				if (!it.hasNext()) {
-					System.out.println("Header element wsName not found.");
-					return true;
-				}
-				
-				SOAPElement wsNameElement = (SOAPElement) it.next();
-				
-				String wsName = wsNameElement.getValue();
-								
-				byte[] byteMsg = soapMessageToBytes(msg);
-				
-				byte[] signatureBytes = parseBase64Binary(signature.getValue());
-								
-				if(!CryptoUtil.verifySignature(byteMsg, wsName, signatureBytes)){
-					System.err.println("Signature is not correct!");
-					throw new RuntimeException();
-				}
-				
-
-			}
-		} catch (RuntimeException e) {
-			throw e;
-		}
-		catch(Exception e){
-			System.out.print("Caught exception in handleMessage: ");
-			System.out.println(e);
-			System.out.println("Continue normal processing...");
-		}
 
 		return true;
 	}
@@ -169,9 +173,20 @@ public class AuthenticityHandler implements SOAPHandler<SOAPMessageContext>{
 		// nothing to clean up
 	}
 	
-	public byte[] soapMessageToBytes(SOAPMessage msg) throws SOAPException, IOException{
+	private byte[] soapMessageToBytes(SOAPMessage msg) throws SOAPException, IOException{
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		msg.writeTo(out);
 		return out.toByteArray();
+	}
+	
+	private SOAPElement getSoapElement(SOAPEnvelope se, SOAPHeader sh, String element) throws SOAPException, SecurityException{
+		Name name = se.createName(element, "l", "http://lmao");
+		Iterator it = sh.getChildElements(name);
+		// check header element
+		if (!it.hasNext()) {
+			System.out.println("Header element "+ element +" not found.");
+			throw new SecurityException("Header element "+ element + " not found.");
+		}
+		return (SOAPElement) it.next();
 	}
 }

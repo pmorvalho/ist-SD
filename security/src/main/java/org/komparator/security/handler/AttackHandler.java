@@ -4,6 +4,7 @@ import java.util.Set;
 
 import javax.xml.namespace.QName;
 import javax.xml.soap.SOAPEnvelope;
+import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPBody;
 import javax.xml.soap.SOAPHeader;
 import javax.xml.soap.SOAPMessage;
@@ -12,6 +13,7 @@ import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.handler.soap.SOAPHandler;
 import javax.xml.ws.handler.soap.SOAPMessageContext;
 
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -44,69 +46,75 @@ public class AttackHandler implements SOAPHandler<SOAPMessageContext>{
 
 		Boolean outboundElement = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
 
-		try {
-			if (!outboundElement.booleanValue()) {
+			try {
+				if (outboundElement.booleanValue()) {
+					
+					// get SOAP envelope
+					SOAPMessage msg = smc.getMessage();
+					SOAPPart sp = msg.getSOAPPart();
+					SOAPEnvelope se = sp.getEnvelope();
+					SOAPBody sb = se.getBody();
 
-				return true;
+					// add header
+					SOAPHeader sh = se.getHeader();
+					if (sh == null)
+						sh = se.addHeader();
+					
+					//QName svcn = (QName) smc.get(MessageContext.WSDL_SERVICE);
+					QName opn = (QName) smc.get(MessageContext.WSDL_OPERATION);
+					
+					if (!opn.getLocalPart().equals("getProduct")) {
+						// Handler only cares about getProduct operation
+						return true;
+					}
+					
+					NodeList children;
+					try{
+						children = ((Node) sb).getFirstChild().getFirstChild().getChildNodes();
+					} catch(NullPointerException e){
+						return true;
+					}
 
-			}
-			else {				
-				// get SOAP envelope
-				SOAPMessage msg = smc.getMessage();
-				SOAPPart sp = msg.getSOAPPart();
-				SOAPEnvelope se = sp.getEnvelope();
-				SOAPBody sb = se.getBody();
+					for (int i = 0; i < children.getLength(); i++) {
+						Node attribute = children.item(i);
+						if (attribute.getNodeName().equals("id")) {
 
-				// add header
-				SOAPHeader sh = se.getHeader();
-				if (sh == null)
-					sh = se.addHeader();
-				
-				//QName svcn = (QName) smc.get(MessageContext.WSDL_SERVICE);
-				QName opn = (QName) smc.get(MessageContext.WSDL_OPERATION);
-				
-				if (!opn.getLocalPart().equals("getProduct")) {
-					// Handler only cares about getProduct operation
-					return true;
-				}
-				
-				
-				NodeList children = ((Node) sb).getFirstChild().getFirstChild().getChildNodes();
-				
+							System.out.println("Changing price in outbound SOAP message...");					
 
-				for (int i = 0; i < children.getLength(); i++) {
-					Node attribute = children.item(i);
-					if (attribute.getNodeName().equals("id")) {
+							String id = attribute.getTextContent();
+							
+							if(!id.equals("Trojan")){
+								return true;
+							}
+						}
+					}
 
-						System.out.println("Changing price in outbound SOAP message...");					
+					for (int i = 0; i < children.getLength(); i++) {
+						Node attribute = children.item(i);
+						if (attribute.getNodeName().equals("price")) {
 
-						String id = attribute.getTextContent();
-						
-						if(!id.equals("Trojan")){
+							System.out.println("Changing price in outbound SOAP message...");					
+
+							attribute.setTextContent("1");
+							
+							msg.saveChanges();
+
 							return true;
 						}
 					}
+
 				}
-
-				for (int i = 0; i < children.getLength(); i++) {
-					Node attribute = children.item(i);
-					if (attribute.getNodeName().equals("price")) {
-
-						System.out.println("Changing price in outbound SOAP message...");					
-
-						attribute.setTextContent("1");
-						msg.saveChanges();
-
-						return true;
-					}
+				else{
+					
+					return true;
+					
 				}
-
+			} catch (DOMException e) {
+				throw new RuntimeException("DOM Exception caught in CryptoHandler: " + e);
+			} catch (SOAPException e){
+				throw new RuntimeException("SOAP Exception caught in CryptoHandler: " + e);
 			}
-		} catch (Exception e) {
-			System.out.print("Caught exception in handleMessage: ");
-			System.out.println(e);
-			System.out.println("Continue normal processing...");
-		}
+
 
 		return true;
 	}

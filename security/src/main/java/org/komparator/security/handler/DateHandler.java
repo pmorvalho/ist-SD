@@ -1,6 +1,7 @@
 package org.komparator.security.handler;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -10,6 +11,7 @@ import javax.xml.namespace.QName;
 import javax.xml.soap.Name;
 import javax.xml.soap.SOAPElement;
 import javax.xml.soap.SOAPEnvelope;
+import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPHeader;
 import javax.xml.soap.SOAPHeaderElement;
 import javax.xml.soap.SOAPMessage;
@@ -51,83 +53,86 @@ public class DateHandler implements SOAPHandler<SOAPMessageContext> {
 	 */
 	@Override
 	public boolean handleMessage(SOAPMessageContext smc) {
-		System.out.println("AddHeaderHandler: Handling message.");
+		System.out.println("DateHandler: Handling message.");
 
 		Boolean outboundElement = (Boolean) smc.get(MessageContext.MESSAGE_OUTBOUND_PROPERTY);
 
-		try {
-			if (outboundElement.booleanValue()) {
-				System.out.println("Writing header in outbound SOAP message...");
 
-				// get SOAP envelope
-				SOAPMessage msg = smc.getMessage();
-				SOAPPart sp = msg.getSOAPPart();
-				SOAPEnvelope se = sp.getEnvelope();
+			try {
+				if (outboundElement.booleanValue()) {
+					System.out.println("Writing date header in outbound SOAP message...");
 
-				// add header
-				SOAPHeader sh = se.getHeader();
-				if (sh == null)
-					sh = se.addHeader();
-				
-				// add header element (name, namespace prefix, namespace)
-				Name name = se.createName("myHeader", "l", "http://lmao");
-				SOAPHeaderElement element = sh.addHeaderElement(name);
+					// get SOAP envelope
+					SOAPMessage msg = smc.getMessage();
+					SOAPPart sp = msg.getSOAPPart();
+					SOAPEnvelope se = sp.getEnvelope();
 
-				// add header element value
-				Date date = new Date();
-				String strDate = date.toString();
-				element.addTextNode(strDate);
+					// add header
+					SOAPHeader sh = se.getHeader();
+					if (sh == null)
+						sh = se.addHeader();
+					
+					// add header element (name, namespace prefix, namespace)
+					Name name = se.createName("date", "l", "http://lmao");
+					SOAPHeaderElement element = sh.addHeaderElement(name);
 
-			} else {
-				System.out.println("Reading header in inbound SOAP message...");
+					// add header element value
+					Date date = new Date();
+					String strDate = date.toString();
+					element.addTextNode(strDate);
 
-				// get SOAP envelope header
-				SOAPMessage msg = smc.getMessage();
-				SOAPPart sp = msg.getSOAPPart();
-				SOAPEnvelope se = sp.getEnvelope();
-				SOAPHeader sh = se.getHeader();
+				} else {
+					System.out.println("Reading date header in inbound SOAP message...");
 
-				// check header
-				if (sh == null) {
-					System.out.println("Header not found.");
-					return true;
+					// get SOAP envelope header
+					SOAPMessage msg = smc.getMessage();
+					SOAPPart sp = msg.getSOAPPart();
+					SOAPEnvelope se = sp.getEnvelope();
+					SOAPHeader sh = se.getHeader();
+
+					// check header
+					if (sh == null) {
+						System.out.println("Header not found.");
+						throw new RuntimeException("Header not found");
+					}
+
+					// get first header element
+					Name name = se.createName("date", "l", "http://lmao");
+					Iterator it = sh.getChildElements(name);
+					// check header element
+					if (!it.hasNext()) {
+						System.out.println("Header element not found.");
+						return true;
+					}
+					SOAPElement element = (SOAPElement) it.next();
+
+					// get header element value
+					String valueString = element.getValue();
+					DateFormat formatter = new SimpleDateFormat("EEE MMM dd hh:mm:ss zzz yyyy");
+					Date value = formatter.parse(valueString);
+					Date actual = new Date();
+					if((actual.getTime()-value.getTime()) > 3000){ //3000 milisegundos = 3 segundos
+						System.out.println("Received SOAP message is not fresh!");
+						throw new RuntimeException();
+					}
+
+					// print received header
+					System.out.println("Header value is " + value);
+
+					// put header in a property context
+					smc.put(CONTEXT_PROPERTY, value);
+					// set property scope to application client/server class can
+					// access it
+					smc.setScope(CONTEXT_PROPERTY, Scope.APPLICATION);
 				}
-
-				// get first header element
-				Name name = se.createName("myHeader", "l", "http://lmao");
-				Iterator it = sh.getChildElements(name);
-				// check header element
-				if (!it.hasNext()) {
-					System.out.println("Header element not found.");
-					return true;
-				}
-				SOAPElement element = (SOAPElement) it.next();
-
-				// get header element value
-				String valueString = element.getValue();
-				DateFormat formatter = new SimpleDateFormat("EEE MMM dd hh:mm:ss zzz yyyy");
-				Date value = formatter.parse(valueString);
-				Date actual = new Date();
-				if((actual.getTime()-value.getTime()) > 3000){ //3000 milisegundos = 3 segundos
-					System.out.println("Received SOAP message is not fresh!");
-					throw new java.lang.RuntimeException();
-				}
-
-				// print received header
-				System.out.println("Header value is " + value);
-
-				// put header in a property context
-				smc.put(CONTEXT_PROPERTY, value);
-				// set property scope to application client/server class can
-				// access it
-				smc.setScope(CONTEXT_PROPERTY, Scope.APPLICATION);
-
+			} catch (SOAPException e) {
+				throw new RuntimeException("SOAP Exception caught in DateHandler: " + e);
+			} catch  (ParseException e) {
+				throw new RuntimeException("Parse Exception caught in DateHandler: " + e);
+			} catch (RuntimeException e) {
+				throw e;
 			}
-		} catch (Exception e) {
-			System.out.print("Caught exception in handleMessage: ");
-			System.out.println(e);
-			System.out.println("Continue normal processing...");
-		}
+			
 
 		return true;
 	}
