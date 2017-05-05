@@ -1,11 +1,19 @@
 package org.komparator.security.handler;
 
+import static javax.xml.bind.DatatypeConverter.parseBase64Binary;
+import static javax.xml.bind.DatatypeConverter.printBase64Binary;
+
+import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import javax.xml.namespace.QName;
 import javax.xml.soap.Name;
@@ -21,9 +29,12 @@ import javax.xml.ws.handler.MessageContext.Scope;
 import javax.xml.ws.handler.soap.SOAPHandler;
 import javax.xml.ws.handler.soap.SOAPMessageContext;
 
+
 public class DateHandler implements SOAPHandler<SOAPMessageContext> {
 
 	public static final String CONTEXT_PROPERTY = "my.property";
+	
+	private static SortedMap<byte[], Date> rands = new TreeMap<byte[], Date>();
 
 	//
 	// Handler interface implementation
@@ -87,8 +98,21 @@ public class DateHandler implements SOAPHandler<SOAPMessageContext> {
 					sh = se.addHeader();
 				
 				// add header element (name, namespace prefix, namespace)
-				Name name = se.createName("date", "l", "http://lmao");
+				Name name = se.createName("rand", "l", "http://lmao");
 				SOAPHeaderElement element = sh.addHeaderElement(name);
+				
+				SecureRandom random = new SecureRandom();
+				byte[] values = new byte[20];
+				random.nextBytes(values);
+				
+				// add header element value
+				element.addTextNode(printBase64Binary(values));
+				
+				msg.saveChanges();
+				
+				// add header element (name, namespace prefix, namespace)
+				name = se.createName("date", "l", "http://lmao");
+				element = sh.addHeaderElement(name);
 
 				// add header element value
 				Date date = new Date();
@@ -131,6 +155,37 @@ public class DateHandler implements SOAPHandler<SOAPMessageContext> {
 
 				// print received header
 				System.out.println("Header value is " + value);
+				
+				for (SortedMap.Entry<byte[], Date> entry : rands.entrySet()){
+				    if(actual.getTime() - entry.getValue().getTime() > 3000){
+				    	rands.remove(entry.getKey());
+				    }
+				}
+				
+				// get first header element
+				name = se.createName("rand", "l", "http://lmao");
+				it = sh.getChildElements(name);
+				// check header element
+				if (!it.hasNext()) {
+					System.out.println("Header element not found.");
+					return true;
+				}
+				SOAPElement randEl = (SOAPElement) it.next();
+				
+				byte[] randBytes = parseBase64Binary(randEl.getValue());
+				
+				
+				if(!rands.containsKey(randBytes)){
+					rands.put(randBytes, value);
+				}
+				else if(rands.get(randBytes).compareTo(value)==0){
+					System.err.println("Error...");
+					throw new RuntimeException("Date already seen!");
+				}
+				else{
+					rands.put(randBytes, value);
+				}
+				
 
 				// put header in a property context
 				smc.put(CONTEXT_PROPERTY, value);
