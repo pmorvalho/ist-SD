@@ -220,7 +220,7 @@ public class CryptoHandler implements SOAPHandler<SOAPMessageContext>{
 		String secretArgument = argument.getTextContent();
 
 		// get private key from KeyStore
-		PrivateKey privateKey = CertUtil.getPrivateKeyFromKeyStoreFile(KEY_STORE,
+		PrivateKey privateKey = CertUtil.getPrivateKeyFromKeyStoreResource(KEY_STORE,
 				PASSWORD.toCharArray(), ALIAS, PASSWORD.toCharArray());
 
 		// cipher message with public key
