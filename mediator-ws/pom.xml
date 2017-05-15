@@ -22,10 +22,20 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <mainclass>org.komparator.mediator.ws.MediatorApp</mainclass>
+        
+        <group.id>A68</group.id>
+
+	    <ws.i>1</ws.i>
+	
+	    <ws.host>localhost</ws.host>
+	    <ws.port>807${ws.i}</ws.port>
+	    <ws.url>http://${ws.host}:${ws.port}/mediator-ws/endpoint</ws.url>
+	   
+	    <ws.name>${group.id}_Mediator</ws.name>
+	
+	    <supplier.ws.name>${group.id}_Supplier</supplier.ws.name>   
 
         <uddi.url>http://a68:peBiX6UK@uddi.sd.rnl.tecnico.ulisboa.pt:9090/</uddi.url>
-        <ws.name>A68_Mediator</ws.name>
-        <ws.url>http://localhost:8080/mediator-ws/endpoint</ws.url>
     </properties>
 
     <dependencies>
@@ -47,14 +57,27 @@
 			<artifactId>supplier-ws-cli</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
+		<!-- CreditCard Client -->
 		<dependency>
         	<groupId>org.komparator.A68</groupId>
 		    <artifactId>cc-ws-cli</artifactId>
     		<version>1.0-SNAPSHOT</version>
     	</dependency>
+    	<!-- Mediator Client -->
+		<dependency>
+			<groupId>org.komparator.A68</groupId>
+			<artifactId>mediator-ws-cli</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
     </dependencies>
 
     <build>
+	    <resources>
+	    	<resource>
+	    		<directory>src/main/resources</directory>
+	    		<filtering>true</filtering>
+	    	</resource>
+	    </resources>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -98,6 +121,7 @@
                         <argument>${uddi.url}</argument>
                         <argument>${ws.name}</argument>
                         <argument>${ws.url}</argument>
+                        <argument>${ws.i}</argument>
                     </arguments>
                 </configuration>
             </plugin>

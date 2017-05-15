@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,6 +46,8 @@ public class MediatorPortImpl implements MediatorPortType{
 	private List<CartView> carts = new ArrayList<CartView>();
 	
 	private static int NumberOfBoughtCarts;
+	
+	private Date latestLifeProof;
 
 	public MediatorPortImpl(MediatorEndpointManager endpointManager) {
 		this.endpointManager = endpointManager;
@@ -300,6 +303,18 @@ public class MediatorPortImpl implements MediatorPortType{
 	@Override
 	public List<ShoppingResultView> shopHistory() {
 		return shoppingResults;
+	}
+	
+	@Override
+	public void imAlive() {
+		System.out.println("imAlive received!");
+		if(endpointManager.isPrimary()){
+			return;
+		}
+		else {
+			this.latestLifeProof= new Date();
+			return;
+		}
 	}
 	
 	

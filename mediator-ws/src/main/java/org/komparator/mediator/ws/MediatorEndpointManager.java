@@ -13,6 +13,8 @@ public class MediatorEndpointManager {
 	private String uddiURL = null;
 	/** Web Service name */
 	private String wsName = null;
+	
+	private boolean isPrimary;
 
 	/** Get Web Service UDDI publication name */
 	public String getWsName() {
@@ -50,20 +52,31 @@ public class MediatorEndpointManager {
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
 	}
+	
+	public boolean isPrimary(){
+		return this.isPrimary;
+	}
 
-	/** constructor with provided UDDI location, WS name, and WS URL */
+	/** constructor with provided UDDI location, WS name, and WS URL
+	 *  This is the primary mediator constructor */
 	public MediatorEndpointManager(String uddiURL, String wsName, String wsURL) {
 		this.uddiURL = uddiURL;
 		this.wsName = wsName;
 		this.wsURL = wsURL;
+		this.isPrimary = true;
 	}
 
-	/** constructor with provided web service URL */
+	/** constructor with provided web service URL 
+	 *  This is the secondary mediator constructor */
 	public MediatorEndpointManager(String wsURL) {
 		if (wsURL == null)
 			throw new NullPointerException("Web Service URL cannot be null!");
 		this.wsURL = wsURL;
+		this.uddiURL = null;
+		this.wsName = null;
+		this.isPrimary = false;
 	}
+	
 
 	/* end point management */
 
@@ -83,6 +96,7 @@ public class MediatorEndpointManager {
 			}
 			throw e;
 		}
+		
 		publishToUDDI();
 	}
 
@@ -154,6 +168,10 @@ public class MediatorEndpointManager {
 				System.out.printf("Caught exception when unbinding: %s%n", e);
 			}
 		}
+	}
+	
+	String makeSecondaryMedUrl(int n){
+		return "http://localhost:807"+n+"/mediator-ws/endpoint";
 	}
 
 }
