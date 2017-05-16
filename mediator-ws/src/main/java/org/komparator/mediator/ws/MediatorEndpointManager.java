@@ -1,6 +1,7 @@
 package org.komparator.mediator.ws;
 
 import java.io.IOException;
+import java.util.Date;
 
 import javax.xml.ws.Endpoint;
 
@@ -14,7 +15,7 @@ public class MediatorEndpointManager {
 	/** Web Service name */
 	private String wsName = null;
 	
-	private boolean isPrimary;
+	private boolean isPrimary = true;
 
 	/** Get Web Service UDDI publication name */
 	public String getWsName() {
@@ -56,25 +57,32 @@ public class MediatorEndpointManager {
 	public boolean isPrimary(){
 		return this.isPrimary;
 	}
+	
+	public Date getLatestLifeProof() {
+		return portImpl.getLatestLifeProof();
+	}
 
-	/** constructor with provided UDDI location, WS name, and WS URL
-	 *  This is the primary mediator constructor */
+	/** constructor with provided UDDI location, WS name, and WS URL */
 	public MediatorEndpointManager(String uddiURL, String wsName, String wsURL) {
 		this.uddiURL = uddiURL;
 		this.wsName = wsName;
 		this.wsURL = wsURL;
-		this.isPrimary = true;
 	}
 
-	/** constructor with provided web service URL 
-	 *  This is the secondary mediator constructor */
+	/** constructor with provided web service URL */
 	public MediatorEndpointManager(String wsURL) {
 		if (wsURL == null)
 			throw new NullPointerException("Web Service URL cannot be null!");
 		this.wsURL = wsURL;
 		this.uddiURL = null;
 		this.wsName = null;
-		this.isPrimary = false;
+	}
+	
+	public MediatorEndpointManager(String uddiURL, String wsName, String wsURL, boolean isPrimary) {
+		this.uddiURL = uddiURL;
+		this.wsName = wsName;
+		this.wsURL = wsURL;
+		this.isPrimary = isPrimary;
 	}
 	
 
@@ -133,11 +141,16 @@ public class MediatorEndpointManager {
 	}
 
 	/* UDDI */
-
+	
+	public void changeToPrimary() throws Exception{
+		this.isPrimary=true;
+		publishToUDDI();
+	}
+	
 	void publishToUDDI() throws Exception {
 		try {
 			// publish to UDDI
-			if (uddiURL != null) {
+			if (uddiURL != null && isPrimary) {
 				if (verbose) {
 					System.out.printf("Publishing '%s' to UDDI at %s%n", wsName, uddiURL);
 				}

@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.jws.HandlerChain;
+import javax.jws.WebParam;
 import javax.jws.WebService;
 
 import org.komparator.supplier.ws.BadProductId_Exception;
@@ -317,6 +318,17 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 	}
 	
+	@Override
+	public void updateShopHistory(ShoppingResultView newPurchase) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void updateCart(String cartId, CartItemView cartItem) {
+		// TODO Auto-generated method stub
+		
+	}	
 	
 	// General Helpers -------------------------------------------------------
 	
@@ -417,6 +429,10 @@ public class MediatorPortImpl implements MediatorPortType{
 	    		return i1.compareTo(i2);
 	    	}
 	    }
+	}
+	
+	public Date getLatestLifeProof() {
+		return latestLifeProof;
 	}
 	
 	// Checks if id is an alphanumeric string without spaces

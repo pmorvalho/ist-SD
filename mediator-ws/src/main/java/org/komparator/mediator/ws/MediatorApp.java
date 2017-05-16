@@ -41,13 +41,13 @@ public class MediatorApp {
 			uddiURL = args[0];
 			wsName = args[1];
 			wsURL = args[2];
-			if(number.equals("1")){
+			if(number.equals("1")){ //is primary
 				System.out.println("This is the primary mediator");
-				endpoint = new MediatorEndpointManager(uddiURL, wsName, wsURL);
+				endpoint = new MediatorEndpointManager(uddiURL, wsName, wsURL,true);
 			}
-			else{
+			else{ //is secondary
 				System.out.println("This is a secondary mediator");
-				endpoint = new MediatorEndpointManager(wsURL);
+				endpoint = new MediatorEndpointManager(uddiURL, wsName, wsURL,false);
 			}
 			endpoint.setVerbose(true);
 		}
@@ -55,11 +55,12 @@ public class MediatorApp {
 		try {
 			Timer timer = new Timer(true);
 			LifeProof lifeProof = new LifeProof(endpoint);
-			timer.schedule(lifeProof, 0,5000);
+			timer.schedule(lifeProof, 1000,5000);
 			endpoint.start();
 			endpoint.awaitConnections();
 		} finally {
 			endpoint.stop();
+			System.exit(0);
 		}
 
 	}

@@ -1,5 +1,6 @@
 package org.komparator.mediator.ws;
 
+import java.util.Date;
 import java.util.TimerTask;
 
 import org.komparator.mediator.ws.cli.MediatorClient;
@@ -26,8 +27,19 @@ public class LifeProof extends TimerTask{
 	@Override
 	public void run() {
 		if(mediator.isPrimary()){
-			medClient.imAlive();
-			System.out.println("imAlive sent!");
+			if(medClient != null){
+				medClient.imAlive();
+				System.out.println("imAlive sent!");
+			}
+		}
+		else{
+			if(mediator.getLatestLifeProof() != null && (new Date()).getTime()-mediator.getLatestLifeProof().getTime()>10*1000){
+				try {
+					mediator.changeToPrimary();
+				} catch (Exception e) {
+					System.out.println("Failed to register Secondary Server in UDDI!");
+				}
+			}
 		}
 	}
 
