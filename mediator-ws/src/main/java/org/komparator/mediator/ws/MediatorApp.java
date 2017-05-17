@@ -51,16 +51,16 @@ public class MediatorApp {
 			}
 			endpoint.setVerbose(true);
 		}
-
+		Timer timer = new Timer(true);
+		LifeProof lifeProof = new LifeProof(endpoint);
 		try {
-			Timer timer = new Timer(true);
-			LifeProof lifeProof = new LifeProof(endpoint);
 			timer.schedule(lifeProof, 1000,5000);
 			endpoint.start();
 			endpoint.awaitConnections();
 		} finally {
 			endpoint.stop();
-			System.exit(0);
+			lifeProof.cancel();
+			timer.cancel();
 		}
 
 	}

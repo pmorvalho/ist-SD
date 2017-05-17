@@ -10,9 +10,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.jws.HandlerChain;
-import javax.jws.WebParam;
 import javax.jws.WebService;
 
+import org.komparator.mediator.ws.cli.MediatorClient;
+import org.komparator.mediator.ws.cli.MediatorClientException;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.BadQuantity_Exception;
 import org.komparator.supplier.ws.BadText_Exception;
@@ -48,10 +49,18 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	private static int NumberOfBoughtCarts;
 	
+	private MediatorClient medClient;
+	
 	private Date latestLifeProof;
 
 	public MediatorPortImpl(MediatorEndpointManager endpointManager) {
 		this.endpointManager = endpointManager;
+		try {
+			this.medClient = new MediatorClient(this.endpointManager.makeSecondaryMedUrl(2));
+		} catch (MediatorClientException e) {
+			System.err.println("Error creating mediator client");
+			System.err.println(e);
+		}
 	}
 
 	// Main operations -------------------------------------------------------
@@ -149,6 +158,7 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 
 		if( supQuantity < itemQty) throwNotEnoughItems("Not enough items, failed.");
+		CartView cart;
 		synchronized(this){
 			for(CartView c : carts){
 
@@ -169,9 +179,15 @@ public class MediatorPortImpl implements MediatorPortType{
 					return;
 				}
 			}
-
-			carts.add(createCartView(cartId, product, client, itemQty));
+			cart = createCartView(cartId, product, client, itemQty);
+			carts.add(cart);
 		}
+		
+		if(this.endpointManager.isPrimary()){
+			medClient.updateCart(cart);
+		}
+
+		System.out.println("Size of cart here is" + cart.getItems().size());
 	}
 
 	@Override
@@ -262,7 +278,12 @@ public class MediatorPortImpl implements MediatorPortType{
 			shoppingResult.setTotalPrice(totalprice);
 			//Shopping result finished
 			shoppingResults.add(0, shoppingResult);
+			if(this.endpointManager.isPrimary()){
+				medClient.updateShopHistory(shoppingResult);
+			}
+			System.out.println("Number of bought carts here is" + NumberOfBoughtCarts);
 			return shoppingResult;
+			
 		}
 	}
 	
@@ -320,14 +341,24 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	@Override
 	public void updateShopHistory(ShoppingResultView newPurchase) {
-		// TODO Auto-generated method stub
-		
+		if(this.endpointManager.isPrimary()){
+			shoppingResults.add(0, newPurchase);
+			NumberOfBoughtCarts++;
+		}
+		System.out.println("Updated Shop History (because of BuyCart)");
+		System.out.println("Number of bought carts here is" + NumberOfBoughtCarts);
 	}
 
 	@Override
-	public void updateCart(String cartId, CartItemView cartItem) {
-		// TODO Auto-generated method stub
-		
+	public void updateCart(CartView cart) {
+		if(this.endpointManager.isPrimary()){
+			for(int i=0;i<carts.size();i++){
+				if(carts.get(i).getCartId().equals(cart.getCartId()))
+					carts.set(i,cart);
+			}
+		}
+		System.out.println("Updated Cart (because of addToCart)");
+		System.out.println("Size of cart here is" + cart.getItems().size());
 	}	
 	
 	// General Helpers -------------------------------------------------------

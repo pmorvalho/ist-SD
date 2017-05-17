@@ -162,8 +162,8 @@ public class MediatorClient implements MediatorPortType {
 	}
 
 	@Override
-	public void updateCart(String cartId, CartItemView cartItem) {
-		port.updateCart(cartId, cartItem);
+	public void updateCart(CartView cart) {
+		port.updateCart(cart);
 	}
 
 }
