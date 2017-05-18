@@ -97,6 +97,7 @@
                     <wsdlFiles>
                         <wsdlFile>${wsdl.filename}</wsdlFile>
                     </wsdlFiles>
+                    <packageName>org.komparator.mediator.ws.cli</packageName>
                 </configuration>
                 <dependencies>
                     <dependency>

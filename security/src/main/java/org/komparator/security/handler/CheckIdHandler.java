@@ -72,49 +72,54 @@ public class CheckIdHandler implements SOAPHandler<SOAPMessageContext>{
 		try {
 			if (outboundElement.booleanValue()) {
 				System.out.println("CheckId Handler outbound SOAP message...");
-//
-//				// get SOAP envelope
-//				SOAPMessage msg = smc.getMessage();
-//				SOAPPart sp = msg.getSOAPPart();
-//				SOAPEnvelope se = sp.getEnvelope();
-//
-//				// add header
-//				SOAPHeader sh = se.getHeader();
-//				if (sh == null)
-//					sh = se.addHeader();
-//				
-//				QName opn = (QName) smc.get(MessageContext.WSDL_OPERATION);
-//				
-//				if (!opn.getLocalPart().equals("updateShopHistory") && !opn.getLocalPart().equals("updateCart")) {
-//					// Handler only ciphers the credit card
-//					// which is only included in the buyCart operation
-//					return true;
-//				}
-//				
-//				// add header element (name, namespace prefix, namespace)
-//				Name name = se.createName("opId", "l", "http://lmao");
-//				SOAPHeaderElement element = sh.addHeaderElement(name);
-//
-//				// add header element value
-//				
-//				int opId = KomparatorSecurityManager.getMostRecentOpId();
-//				String strId = Integer.toString(opId);
-//				element.addTextNode(strId);
-//				
-//				System.out.println("Added opId #" + strId + "to SOAP Message!");
-//				
-//				msg.saveChanges();
-//				
-//				// add header element (name, namespace prefix, namespace)
-//				name = se.createName("clientId", "l", "http://lmao");
-//				element = sh.addHeaderElement(name);
-//
-//				// add header element value
-//				
-//				strId = KomparatorSecurityManager.getMostRecentClientId();
-//				element.addTextNode(strId);
-//				
-//				System.out.println("Added clientId #" + strId + "to SOAP Message!");
+
+				// get SOAP envelope
+				SOAPMessage msg = smc.getMessage();
+				SOAPPart sp = msg.getSOAPPart();
+				SOAPEnvelope se = sp.getEnvelope();
+
+				// add header
+				SOAPHeader sh = se.getHeader();
+				if (sh == null)
+					sh = se.addHeader();
+				
+				QName opn = (QName) smc.get(MessageContext.WSDL_OPERATION);
+				
+				System.out.println("Operation: " + opn.getLocalPart());
+				
+				if (!opn.getLocalPart().equals("updateShopHistory") && !opn.getLocalPart().equals("updateCart")) {
+					System.out.println("Wrong operation!");
+					// Handler only ciphers the credit card
+					// which is only included in the buyCart operation
+					return true;
+				}
+				
+				System.out.println("Right operation, adding header...");
+				
+				// add header element (name, namespace prefix, namespace)
+				Name name = se.createName("opId", "l", "http://lmao");
+				SOAPHeaderElement element = sh.addHeaderElement(name);
+
+				// add header element value
+				
+				int opId = KomparatorSecurityManager.getMostRecentOpId();
+				String strId = Integer.toString(opId);
+				element.addTextNode(strId);
+				
+				System.out.println("Added opId #" + strId + "to SOAP Message!");
+				
+				msg.saveChanges();
+				
+				// add header element (name, namespace prefix, namespace)
+				name = se.createName("clientId", "l", "http://lmao");
+				element = sh.addHeaderElement(name);
+
+				// add header element value
+				
+				strId = KomparatorSecurityManager.getMostRecentClientId();
+				element.addTextNode(strId);
+				
+				System.out.println("Added clientId #" + strId + "to SOAP Message!");
 
 			} else {
 				System.out.println("Inbound SOAP message: Checking client and operation ID");
@@ -142,7 +147,7 @@ public class CheckIdHandler implements SOAPHandler<SOAPMessageContext>{
 				Iterator it = sh.getChildElements(name);
 				// check header element
 				if (!it.hasNext()) {
-					System.out.println("Header element not found.");
+					System.out.println("Header element not found: clientId missing");
 					return true;
 				}
 				SOAPElement element = (SOAPElement) it.next();
@@ -155,7 +160,7 @@ public class CheckIdHandler implements SOAPHandler<SOAPMessageContext>{
 				it = sh.getChildElements(name);
 				// check header element
 				if (!it.hasNext()) {
-					System.out.println("Header element not found.");
+					System.out.println("Header element not found: opId missing");
 					return true;
 				}
 				element = (SOAPElement) it.next();

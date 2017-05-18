@@ -2,12 +2,14 @@ package org.komparator.mediator.ws.cli;
 
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.xml.ws.BindingProvider;
+import javax.xml.ws.WebServiceException;
 
-import org.komparator.mediator.ws.*;
 
 import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINaming;
 
@@ -60,12 +62,14 @@ public class MediatorClient implements MediatorPortType {
     public MediatorClient(String uddiURL, String wsName) throws MediatorClientException {
         this.uddiURL = uddiURL;
         this.wsName = wsName;
-        uddiLookup();
         createStub();
     }
 
     /** UDDI lookup */
     private void uddiLookup() throws MediatorClientException {
+    	if(this.uddiURL==null){
+    		return;
+    	}
         try {
             if (verbose)
                 System.out.printf("Contacting UDDI at %s%n", uddiURL);
@@ -91,6 +95,14 @@ public class MediatorClient implements MediatorPortType {
 
     /** Stub creation and configuration */
     private void createStub() {
+    	try {
+			uddiLookup();
+		} catch (MediatorClientException e) {
+			System.out.println("Failed to find service in UDDI. Retrying...");
+			sleep(1); //wait one second before retrying
+			createStub();
+			return;
+		}
         if (verbose)
             System.out.println("Creating stub ...");
          service = new MediatorService();
@@ -103,6 +115,30 @@ public class MediatorClient implements MediatorPortType {
             Map<String, Object> requestContext = bindingProvider
                     .getRequestContext();
             requestContext.put(ENDPOINT_ADDRESS_PROPERTY, wsURL);
+            
+//            int connectionTimeout = 20000;
+//            // The connection timeout property has different names in different versions of JAX-WS
+//            // Set them all to avoid compatibility issues
+//            final List<String> CONN_TIME_PROPS = new ArrayList<String>();
+//            CONN_TIME_PROPS.add("com.sun.xml.ws.connect.timeout");
+//            CONN_TIME_PROPS.add("com.sun.xml.internal.ws.connect.timeout");
+//            CONN_TIME_PROPS.add("javax.xml.ws.client.connectionTimeout");
+//            // Set timeout until a connection is established (unit is milliseconds; 0 means infinite)
+//            for (String propName : CONN_TIME_PROPS)
+//                requestContext.put(propName, connectionTimeout);
+//            System.out.printf("Set connection timeout to %d milliseconds%n", connectionTimeout);
+
+            int receiveTimeout = 15000;
+            // The receive timeout property has alternative names
+            // Again, set them all to avoid compability issues
+            final List<String> RECV_TIME_PROPS = new ArrayList<String>();
+            RECV_TIME_PROPS.add("com.sun.xml.ws.request.timeout");
+            RECV_TIME_PROPS.add("com.sun.xml.internal.ws.request.timeout");
+            RECV_TIME_PROPS.add("javax.xml.ws.client.receiveTimeout");
+            // Set timeout until the response is received (unit is milliseconds; 0 means infinite)
+            for (String propName : RECV_TIME_PROPS)
+                requestContext.put(propName, receiveTimeout);
+            System.out.printf("Set receive timeout to %d milliseconds%n", receiveTimeout);
         }
     }
 
@@ -116,59 +152,144 @@ public class MediatorClient implements MediatorPortType {
 
     @Override
     public String ping(String arg0) {
-    	return port.ping(arg0);
+    	try{
+    		return port.ping(arg0);
+    	}
+    	catch(WebServiceException wse){
+    		retry(wse);
+            return ping(arg0);
+    	}
+    		
     }
 
     @Override
     public List<ItemView> searchItems(String descText) throws InvalidText_Exception {
-    	return port.searchItems(descText);
+	    try{	
+	    	return port.searchItems(descText);
+	    }
+		catch(WebServiceException wse){
+			retry(wse);
+	        return searchItems(descText);
+		}
     }
 
     @Override
     public List<CartView> listCarts() {
-    	return port.listCarts();
+    	try {
+			return port.listCarts();
+		}
+    	catch(WebServiceException wse){
+			retry(wse);
+	        return listCarts();
+		}
     }
 
     @Override
     public List<ItemView> getItems(String productId) throws InvalidItemId_Exception {
-    	return port.getItems(productId);
+    	try {
+    		return port.getItems(productId);
+    	}
+    	catch(WebServiceException wse){
+			retry(wse);
+	        return getItems(productId);
+		}
     }
 
     @Override
     public ShoppingResultView buyCart(String cartId, String creditCardNr)
     		throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
-    	return port.buyCart(cartId, creditCardNr);
+    	try {
+    		return port.buyCart(cartId, creditCardNr);
+    	}
+    	catch(WebServiceException wse){
+			retry(wse);
+	        return buyCart(cartId, creditCardNr);
+		}
     }
 
     @Override
     public void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
     InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
-    	port.addToCart(cartId, itemId, itemQty);
+    	try {
+    		port.addToCart(cartId, itemId, itemQty);
+    	}
+    	catch(WebServiceException wse){
+			retry(wse);
+	        addToCart(cartId, itemId, itemQty);
+		}
     }
 
     @Override
     public List<ShoppingResultView> shopHistory() {
-    	return port.shopHistory();
+    	try {
+    		return port.shopHistory();
+    	}
+    	catch(WebServiceException wse){
+			retry(wse);
+	        return shopHistory();
+		}
     }
 
 	@Override
 	public void imAlive() {
-		port.imAlive();
+		try {
+			port.imAlive();
+		}
+		catch(WebServiceException wse){
+			retry(wse);
+			imAlive();
+		}
 	}
 	
 	@Override
 	public void updateShopHistory(ShoppingResultView newPurchase) {
-		port.updateShopHistory(newPurchase);
+		try {
+			port.updateShopHistory(newPurchase);
+		}
+		catch(WebServiceException wse){
+			retry(wse);
+			updateShopHistory(newPurchase);
+		}
 	}
 
 	@Override
 	public void updateCart(CartView cart) {
-		port.updateCart(cart);
+		try {
+			port.updateCart(cart);
+		}
+		catch(WebServiceException wse){
+			retry(wse);
+			updateCart(cart);
+		}
 	}
 
 	@Override
 	public void updateClear() {
-		port.updateClear();
+		try {
+			port.updateClear();
+		}
+		catch(WebServiceException wse){
+			retry(wse);
+			updateClear();
+		}
+	}
+	
+	private void retry(WebServiceException wse) {
+		System.out.println("Caught: " + wse);
+		Throwable cause = wse.getCause();
+		if (cause != null && cause instanceof SocketTimeoutException) {
+		    System.out.println("The cause was a timeout exception: " + cause);
+		}
+		System.out.println("Retrying request...");
+		createStub();
+	}
+	
+	private void sleep(int dur){
+		try {
+			Thread.sleep(dur*1000);
+		} catch (InterruptedException e) {
+			System.out.println("Sleep was interrupted: " + e);
+		}
 	}
 
 }

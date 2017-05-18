@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -131,6 +132,9 @@ public class MediatorPortImpl implements MediatorPortType{
 	InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {		
 		
 		if(KomparatorSecurityManager.isDuplicated()){
+			
+			System.out.println("\nDuplicate addToCart operation - responding immediatley\n");
+			
 			KomparatorSecurityManager.setDuplicated(false);
 			return; 
 		}
@@ -206,7 +210,7 @@ public class MediatorPortImpl implements MediatorPortType{
 		
 		if(KomparatorSecurityManager.isDuplicated()){
 			
-			System.out.println("\nBuyCart operation duplicated - responding immediatley\n");
+			System.out.println("\nDuplicate BuyCart operation - responding immediatley\n");
 			
 			KomparatorSecurityManager.setDuplicated(false);
 			return mostRecentShoppingResult;
@@ -298,8 +302,17 @@ public class MediatorPortImpl implements MediatorPortType{
 			shoppingResults.add(0, shoppingResult);
 			if(medClient != null){
 				medClient.updateShopHistory(shoppingResult);
+				System.out.println("\n---------------------------------- ALTO LÁ!!!!!! ----------------------------------\n");
+				System.exit(0);
+//				try {
+//					TimeUnit.SECONDS.sleep(30);
+//				} catch (InterruptedException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
 			}
 			System.out.println("Number of bought carts here is" + NumberOfBoughtCarts);
+			
 			return shoppingResult;
 			
 		}
@@ -372,10 +385,18 @@ public class MediatorPortImpl implements MediatorPortType{
 
 	@Override
 	public void updateCart(CartView cart) {
+		boolean newCart = true;
 		for(int i=0;i<carts.size();i++){
-			if(carts.get(i).getCartId().equals(cart.getCartId()))
+			if(carts.get(i).getCartId().equals(cart.getCartId())) {
 				carts.set(i,cart);
+				newCart = false;
+				break;
+			}
 		}
+		if (newCart) {
+			carts.add(cart);
+		}
+
 		System.out.println("Updated Cart (because of addToCart)");
 		System.out.println("Size of cart here is" + cart.getItems().size());
 	}
