@@ -71,50 +71,50 @@ public class CheckIdHandler implements SOAPHandler<SOAPMessageContext>{
 
 		try {
 			if (outboundElement.booleanValue()) {
-				System.out.println("Writing client and operation ID header in outbound SOAP message...");
-
-				// get SOAP envelope
-				SOAPMessage msg = smc.getMessage();
-				SOAPPart sp = msg.getSOAPPart();
-				SOAPEnvelope se = sp.getEnvelope();
-
-				// add header
-				SOAPHeader sh = se.getHeader();
-				if (sh == null)
-					sh = se.addHeader();
-				
-				QName opn = (QName) smc.get(MessageContext.WSDL_OPERATION);
-				
-				if (!opn.getLocalPart().equals("updateShopHistory") && !opn.getLocalPart().equals("updateCart")) {
-					// Handler only ciphers the credit card
-					// which is only included in the buyCart operation
-					return true;
-				}
-				
-				// add header element (name, namespace prefix, namespace)
-				Name name = se.createName("opId", "l", "http://lmao");
-				SOAPHeaderElement element = sh.addHeaderElement(name);
-
-				// add header element value
-				
-				int opId = KomparatorSecurityManager.getMostRecentOpId();
-				String strId = Integer.toString(opId);
-				element.addTextNode(strId);
-				
-				System.out.println("Added opId #" + strId + "to SOAP Message!");
-				
-				msg.saveChanges();
-				
-				// add header element (name, namespace prefix, namespace)
-				name = se.createName("clientId", "l", "http://lmao");
-				element = sh.addHeaderElement(name);
-
-				// add header element value
-				
-				strId = KomparatorSecurityManager.getMostRecentClientId();
-				element.addTextNode(strId);
-				
-				System.out.println("Added clientId #" + strId + "to SOAP Message!");
+				System.out.println("CheckId Handler outbound SOAP message...");
+//
+//				// get SOAP envelope
+//				SOAPMessage msg = smc.getMessage();
+//				SOAPPart sp = msg.getSOAPPart();
+//				SOAPEnvelope se = sp.getEnvelope();
+//
+//				// add header
+//				SOAPHeader sh = se.getHeader();
+//				if (sh == null)
+//					sh = se.addHeader();
+//				
+//				QName opn = (QName) smc.get(MessageContext.WSDL_OPERATION);
+//				
+//				if (!opn.getLocalPart().equals("updateShopHistory") && !opn.getLocalPart().equals("updateCart")) {
+//					// Handler only ciphers the credit card
+//					// which is only included in the buyCart operation
+//					return true;
+//				}
+//				
+//				// add header element (name, namespace prefix, namespace)
+//				Name name = se.createName("opId", "l", "http://lmao");
+//				SOAPHeaderElement element = sh.addHeaderElement(name);
+//
+//				// add header element value
+//				
+//				int opId = KomparatorSecurityManager.getMostRecentOpId();
+//				String strId = Integer.toString(opId);
+//				element.addTextNode(strId);
+//				
+//				System.out.println("Added opId #" + strId + "to SOAP Message!");
+//				
+//				msg.saveChanges();
+//				
+//				// add header element (name, namespace prefix, namespace)
+//				name = se.createName("clientId", "l", "http://lmao");
+//				element = sh.addHeaderElement(name);
+//
+//				// add header element value
+//				
+//				strId = KomparatorSecurityManager.getMostRecentClientId();
+//				element.addTextNode(strId);
+//				
+//				System.out.println("Added clientId #" + strId + "to SOAP Message!");
 
 			} else {
 				System.out.println("Inbound SOAP message: Checking client and operation ID");
@@ -129,12 +129,14 @@ public class CheckIdHandler implements SOAPHandler<SOAPMessageContext>{
 				if (sh == null) {
 					sh = se.addHeader();
 				}
-
+				System.out.println("Pre operation get");
 				QName opn = (QName) smc.get(MessageContext.WSDL_OPERATION);
-				
+				System.out.println("Pos operation get");
 				if (!opn.getLocalPart().equals("buyCart") && !opn.getLocalPart().equals("addToCart") && !opn.getLocalPart().equals("updateShopHistory") && !opn.getLocalPart().equals("updateCart")) {
+					System.out.println("Inside if");
 					return true;
 				}
+				System.out.println("getting client id");
 				
 				Name name = se.createName("clientId", "l", "http://lmao");
 				Iterator it = sh.getChildElements(name);
@@ -147,6 +149,8 @@ public class CheckIdHandler implements SOAPHandler<SOAPMessageContext>{
 				
 				String clientId = element.getValue();
 				
+				System.out.println("got client id -- getting operation id");
+				
 				name = se.createName("opId", "l", "http://lmao");
 				it = sh.getChildElements(name);
 				// check header element
@@ -157,10 +161,12 @@ public class CheckIdHandler implements SOAPHandler<SOAPMessageContext>{
 				element = (SOAPElement) it.next();
 				
 				String elementValue = element.getValue();
-				int opId = new Integer(elementValue);
+				Integer opId = new Integer(elementValue);
 				
+				System.out.println("got operation id");
 				
-				if(KomparatorSecurityManager.getIdMap().get(clientId)==opId){
+				if(KomparatorSecurityManager.getIdMap().get(clientId) != null && 
+						KomparatorSecurityManager.getIdMap().get(clientId).equals(opId)){
 					KomparatorSecurityManager.setDuplicated(true);
 					System.out.println("Duplicate operation ID. Duplicate flag is set");
 				}
@@ -174,7 +180,7 @@ public class CheckIdHandler implements SOAPHandler<SOAPMessageContext>{
 
 			}
 		} catch (SOAPException e) {
-			throw new RuntimeException("SOAP Exception caught in DateHandler: " + e);
+			throw new RuntimeException("SOAP Exception caught in CheckIdHandler: " + e);
 		}
 		
 

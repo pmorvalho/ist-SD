@@ -26,7 +26,7 @@ public class MediatorEndpointManager {
 	private String wsURL = null;
 
 	/** Port implementation */
-	private MediatorPortImpl portImpl = new MediatorPortImpl(this);
+	private MediatorPortImpl portImpl;
 
 	/** Obtain Port implementation */
 	public MediatorPortType getPort() {
@@ -78,13 +78,14 @@ public class MediatorEndpointManager {
 		this.wsName = null;
 	}
 	
-	public MediatorEndpointManager(String uddiURL, String wsName, String wsURL, boolean isPrimary) {
+	public MediatorEndpointManager(String uddiURL, String wsName, String wsURL, boolean isPrim) {
 		this.uddiURL = uddiURL;
 		this.wsName = wsName;
 		this.wsURL = wsURL;
-		this.isPrimary = isPrimary;
+		this.isPrimary = isPrim;
+		this.portImpl = new MediatorPortImpl(this);
 	}
-	
+
 
 	/* end point management */
 

@@ -14,6 +14,7 @@ import javax.jws.WebService;
 
 import org.komparator.mediator.ws.cli.MediatorClient;
 import org.komparator.mediator.ws.cli.MediatorClientException;
+import org.komparator.security.KomparatorSecurityManager;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.BadQuantity_Exception;
 import org.komparator.supplier.ws.BadText_Exception;
@@ -51,15 +52,19 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	private MediatorClient medClient;
 	
+	private ShoppingResultView mostRecentShoppingResult;
 	private Date latestLifeProof;
 
 	public MediatorPortImpl(MediatorEndpointManager endpointManager) {
 		this.endpointManager = endpointManager;
-		try {
-			this.medClient = new MediatorClient(this.endpointManager.makeSecondaryMedUrl(2));
-		} catch (MediatorClientException e) {
-			System.err.println("Error creating mediator client");
-			System.err.println(e);
+		if (this.endpointManager.isPrimary()) {
+			System.out.println("\nConnecting to secondary mediator...\n");
+			try {
+				this.medClient = new MediatorClient(this.endpointManager.makeSecondaryMedUrl(2));
+			} catch (MediatorClientException e) {
+				System.err.println("Error creating mediator client");
+				System.err.println(e);
+			}
 		}
 	}
 
@@ -125,6 +130,11 @@ public class MediatorPortImpl implements MediatorPortType{
 	public void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
 	InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {		
 		
+		if(KomparatorSecurityManager.isDuplicated()){
+			KomparatorSecurityManager.setDuplicated(false);
+			return; 
+		}
+		
 		if( cartId == null || !checkId(cartId.trim()) ) throwInvalidCartId("Cart ID is incorrect, failed.");
 				
 		if( itemId == null || itemId.getProductId() == null || !checkId(itemId.getProductId().trim()) || getItems(itemId.getProductId()).isEmpty())  
@@ -183,7 +193,7 @@ public class MediatorPortImpl implements MediatorPortType{
 			carts.add(cart);
 		}
 		
-		if(this.endpointManager.isPrimary()){
+		if(medClient != null){
 			medClient.updateCart(cart);
 		}
 
@@ -193,6 +203,14 @@ public class MediatorPortImpl implements MediatorPortType{
 	@Override
 	public ShoppingResultView buyCart(String cartId, String creditCardNr)
 			throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
+		
+		if(KomparatorSecurityManager.isDuplicated()){
+			
+			System.out.println("\nBuyCart operation duplicated - responding immediatley\n");
+			
+			KomparatorSecurityManager.setDuplicated(false);
+			return mostRecentShoppingResult;
+		}
 		
 		if( cartId==null || !checkId(cartId.trim()) ) throwInvalidCartId("Cart ID is incorrect, failed.");
 		
@@ -278,7 +296,7 @@ public class MediatorPortImpl implements MediatorPortType{
 			shoppingResult.setTotalPrice(totalprice);
 			//Shopping result finished
 			shoppingResults.add(0, shoppingResult);
-			if(this.endpointManager.isPrimary()){
+			if(medClient != null){
 				medClient.updateShopHistory(shoppingResult);
 			}
 			System.out.println("Number of bought carts here is" + NumberOfBoughtCarts);
@@ -314,6 +332,9 @@ public class MediatorPortImpl implements MediatorPortType{
 		carts.clear();
 		shoppingResults.clear();
 		NumberOfBoughtCarts=0;
+		
+		if (medClient != null)
+			medClient.updateClear();
 	}
 
 	@Override
@@ -341,25 +362,30 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	@Override
 	public void updateShopHistory(ShoppingResultView newPurchase) {
-		if(this.endpointManager.isPrimary()){
-			shoppingResults.add(0, newPurchase);
-			NumberOfBoughtCarts++;
-		}
-		System.out.println("Updated Shop History (because of BuyCart)");
+		shoppingResults.add(0, newPurchase);
+		NumberOfBoughtCarts++;
+		mostRecentShoppingResult = newPurchase;
+		System.out.println("\n\nUpdated Shop History (because of BuyCart)");
 		System.out.println("Number of bought carts here is" + NumberOfBoughtCarts);
+		System.out.println("\n");
 	}
 
 	@Override
 	public void updateCart(CartView cart) {
-		if(this.endpointManager.isPrimary()){
-			for(int i=0;i<carts.size();i++){
-				if(carts.get(i).getCartId().equals(cart.getCartId()))
-					carts.set(i,cart);
-			}
+		for(int i=0;i<carts.size();i++){
+			if(carts.get(i).getCartId().equals(cart.getCartId()))
+				carts.set(i,cart);
 		}
 		System.out.println("Updated Cart (because of addToCart)");
 		System.out.println("Size of cart here is" + cart.getItems().size());
-	}	
+	}
+	
+	@Override
+	public void updateClear() {
+		carts.clear();
+		shoppingResults.clear();
+		NumberOfBoughtCarts=0;
+	}
 	
 	// General Helpers -------------------------------------------------------
 	

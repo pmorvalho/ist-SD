@@ -83,7 +83,7 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 				
 				QName opn = (QName) smc.get(MessageContext.WSDL_OPERATION);
 				
-				if (!opn.getLocalPart().equals("buyCart") && !opn.getLocalPart().equals("addToCart")) {
+				if (!opn.getLocalPart().equals("buyCart") && !opn.getLocalPart().equals("addToCart") && !opn.getLocalPart().equals("updateShopHistory") && !opn.getLocalPart().equals("updateCart")) {
 					// Handler only ciphers the credit card
 					// which is only included in the buyCart operation
 					return true;
@@ -94,12 +94,16 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 				SOAPHeaderElement element = sh.addHeaderElement(name);
 
 				// add header element value
+				int id;
+				if(opn.getLocalPart().equals("addToCart") || opn.getLocalPart().equals("buyCart"))
+					id = KomparatorSecurityManager.getIdCounter();
+				else
+					id = KomparatorSecurityManager.getMostRecentOpId();
 				
-				int id = KomparatorSecurityManager.getIdCounter();
 				String strId = Integer.toString(id);
 				element.addTextNode(strId);
 				
-				System.out.println("Added opId #" + strId + "to SOAP Message!");
+				System.out.println("Added opId #" + strId + " to SOAP Message!");
 				
 				msg.saveChanges();
 				
@@ -108,11 +112,14 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 				element = sh.addHeaderElement(name);
 
 				// add header element value
+				if(opn.getLocalPart().equals("addToCart") || opn.getLocalPart().equals("buyCart"))
+					strId = "777"; //TODO random number???
+				else
+					strId = KomparatorSecurityManager.getMostRecentClientId();
 				
-				strId = "777"; //TODO random number???
 				element.addTextNode(strId);
 				
-				System.out.println("Added clientId #" + strId + "to SOAP Message!");
+				System.out.println("Added clientId #" + strId + " to SOAP Message!");
 
 			} else {
 				System.out.println("Inbound SOAP message: Incrementing operation ID");
@@ -127,19 +134,24 @@ public class IdHandler implements SOAPHandler<SOAPMessageContext>{
 				if (sh == null) {
 					sh = se.addHeader();
 				}
-
+				
 				QName opn = (QName) smc.get(MessageContext.WSDL_OPERATION);
 				
+				System.out.println("\nChecking operation --> " + opn.getLocalPart());
+				
 				if (!opn.getLocalPart().equals("buyCart") && !opn.getLocalPart().equals("addToCart")) {
+					System.out.println("\nMorri...\n");
 					return true;
 				}
+				
+				System.out.println("\nOperation checked...\n");
 				
 				KomparatorSecurityManager.incIdCounter();
 				System.out.println("Incremented Id!");
 
 			}
 		} catch (SOAPException e) {
-			throw new RuntimeException("SOAP Exception caught in DateHandler: " + e);
+			throw new RuntimeException("SOAP Exception caught in IdHandler: " + e);
 		}
 		
 

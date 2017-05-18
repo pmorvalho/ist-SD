@@ -166,4 +166,9 @@ public class MediatorClient implements MediatorPortType {
 		port.updateCart(cart);
 	}
 
+	@Override
+	public void updateClear() {
+		port.updateClear();
+	}
+
 }
