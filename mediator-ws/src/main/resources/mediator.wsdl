@@ -260,6 +260,8 @@ wsdl:service, wsdl:portType, wsdl:types and wsdl:binding below
             
             <xs:complexType name="updateCart">
                 <xs:sequence>
+                	<xs:element name="clientId" type="xs:string" minOccurs="0"/>
+                	<xs:element name="opId" type="xs:int" minOccurs="0"/>
                     <xs:element name="cart" type="tns:cartView" minOccurs="0"/>
                 </xs:sequence>
             </xs:complexType>

@@ -6,8 +6,11 @@ import java.util.TreeMap;
 public class KomparatorSecurityManager {
 	private String wsName;
 	
-	private int idCounter;
+	/*Fault Tolerance -- For Mediator Client use*/
+	private int idCounter = 1; //operation ID
+	private String clientId;
 	
+	/*Fault Tolerance -- For Mediator use*/
 	private Map<String,Integer> idMap = new TreeMap<String,Integer>();
 	private boolean duplicated = false;
 	private String mostRecentClientId;
@@ -76,5 +79,13 @@ public class KomparatorSecurityManager {
 
 	public static void setMostRecentOpId(int mostRecentOpId) {
 		getInstance().mostRecentOpId = mostRecentOpId;
+	}
+
+	public static String getClientId() {
+		return getInstance().clientId;
+	}
+
+	public static void setClientId(String clientId) {
+		getInstance().clientId = clientId;
 	}
 }

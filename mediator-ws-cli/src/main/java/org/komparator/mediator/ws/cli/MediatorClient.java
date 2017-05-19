@@ -2,6 +2,7 @@ package org.komparator.mediator.ws.cli;
 
 import static javax.xml.ws.BindingProvider.ENDPOINT_ADDRESS_PROPERTY;
 
+import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,7 @@ import org.komparator.mediator.ws.MediatorPortType;
 import org.komparator.mediator.ws.MediatorService;
 import org.komparator.mediator.ws.NotEnoughItems_Exception;
 import org.komparator.mediator.ws.ShoppingResultView;
+import org.komparator.security.KomparatorSecurityManager;
 
 import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINaming;
 
@@ -35,7 +37,10 @@ import pt.ulisboa.tecnico.sdis.ws.uddi.UDDINaming;
  */
 public class MediatorClient implements MediatorPortType {
 
-     /** WS service */
+	private static final int RECEIVE_TIMEOUT = 10; // in seconds
+	private static final int CONNECTION_TIMEOUT = 10; // in seconds
+
+	/** WS service */
      MediatorService service = null;
 
      /** WS port (port type is the interface, port is the implementation) */
@@ -68,6 +73,7 @@ public class MediatorClient implements MediatorPortType {
     /** constructor with provided web service URL */
     public MediatorClient(String wsURL) throws MediatorClientException {
         this.wsURL = wsURL;
+        KomparatorSecurityManager.setClientId(Long.toString(System.currentTimeMillis()));
         createStub();
     }
 
@@ -75,6 +81,7 @@ public class MediatorClient implements MediatorPortType {
     public MediatorClient(String uddiURL, String wsName) throws MediatorClientException {
         this.uddiURL = uddiURL;
         this.wsName = wsName;
+        KomparatorSecurityManager.setClientId(Long.toString(System.currentTimeMillis()));
         createStub();
     }
 
@@ -111,8 +118,8 @@ public class MediatorClient implements MediatorPortType {
     	try {
 			uddiLookup();
 		} catch (MediatorClientException e) {
-			System.out.println("Failed to find service in UDDI. Retrying...");
-			sleep(1); //wait one second before retrying
+			System.out.println("Failed to find service in UDDI. Retrying in 2 seconds...");
+			sleep(2); //wait 2 seconds before retrying
 			createStub();
 			return;
 		}
@@ -129,19 +136,19 @@ public class MediatorClient implements MediatorPortType {
                     .getRequestContext();
             requestContext.put(ENDPOINT_ADDRESS_PROPERTY, wsURL);
             
-//            int connectionTimeout = 20000;
-//            // The connection timeout property has different names in different versions of JAX-WS
-//            // Set them all to avoid compatibility issues
-//            final List<String> CONN_TIME_PROPS = new ArrayList<String>();
-//            CONN_TIME_PROPS.add("com.sun.xml.ws.connect.timeout");
-//            CONN_TIME_PROPS.add("com.sun.xml.internal.ws.connect.timeout");
-//            CONN_TIME_PROPS.add("javax.xml.ws.client.connectionTimeout");
-//            // Set timeout until a connection is established (unit is milliseconds; 0 means infinite)
-//            for (String propName : CONN_TIME_PROPS)
-//                requestContext.put(propName, connectionTimeout);
-//            System.out.printf("Set connection timeout to %d milliseconds%n", connectionTimeout);
+            int connectionTimeout = CONNECTION_TIMEOUT * 1000;
+            // The connection timeout property has different names in different versions of JAX-WS
+            // Set them all to avoid compatibility issues
+            final List<String> CONN_TIME_PROPS = new ArrayList<String>();
+            CONN_TIME_PROPS.add("com.sun.xml.ws.connect.timeout");
+            CONN_TIME_PROPS.add("com.sun.xml.internal.ws.connect.timeout");
+            CONN_TIME_PROPS.add("javax.xml.ws.client.connectionTimeout");
+            // Set timeout until a connection is established (unit is milliseconds; 0 means infinite)
+            for (String propName : CONN_TIME_PROPS)
+                requestContext.put(propName, connectionTimeout);
+            System.out.printf("Set connection timeout to %d milliseconds%n", connectionTimeout);
 
-            int receiveTimeout = 15000;
+            int receiveTimeout = RECEIVE_TIMEOUT * 1000;
             // The receive timeout property has alternative names
             // Again, set them all to avoid compability issues
             final List<String> RECV_TIME_PROPS = new ArrayList<String>();
@@ -266,13 +273,13 @@ public class MediatorClient implements MediatorPortType {
 	}
 
 	@Override
-	public void updateCart(CartView cart) {
+	public void updateCart(String clientId, Integer opId, CartView cart) {
 		try {
-			port.updateCart(cart);
+			port.updateCart(clientId, opId, cart);
 		}
 		catch(WebServiceException wse){
 			retry(wse);
-			updateCart(cart);
+			updateCart(clientId, opId, cart);
 		}
 	}
 
@@ -288,16 +295,22 @@ public class MediatorClient implements MediatorPortType {
 	}
 	
 	private void retry(WebServiceException wse) {
-		System.out.println("Caught: " + wse);
+		System.out.println("Caught WebServiceException");
 		Throwable cause = wse.getCause();
-		if (cause != null && cause instanceof SocketTimeoutException) {
-		    System.out.println("The cause was a timeout exception: " + cause);
+		if (cause != null && (cause instanceof SocketTimeoutException || cause instanceof ConnectException)) {
+		    System.out.println("The cause was : " + cause);
+		    System.out.println("Retrying request in 2 seconds...");
+		    sleep(2); //wait 2 seconds before retrying
+			createStub();
 		}
-		System.out.println("Retrying request...");
-		createStub();
+		else {
+			System.out.println("The cause was : " + cause);
+			System.out.println("Throw exception again");
+			throw wse;
+		}
 	}
 	
-	private void sleep(int dur){
+	private void sleep(int dur) { // in seconds
 		try {
 			Thread.sleep(dur*1000);
 		} catch (InterruptedException e) {

@@ -400,6 +400,23 @@ public class AddToCartIT extends BaseIT {
     	mediatorClient.addToCart("Cart2", item, 4);
     }
 
+    // new test - primary Mediator will be shut down during addToCart but test should not fail
+    @Test
+    public void replacePrimary() throws InvalidItemId_Exception, InvalidCartId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {
+		
+    	ItemIdView item = new ItemIdView();
+		item.setProductId("X1");
+		item.setSupplierId(supplierClients.get(0).getWsName());
+
+    	mediatorClient.addToCart("killAddToCart", item, 8);
+    	
+    	List<CartView> carts = mediatorClient.listCarts();
+    	assertEquals(1,carts.size());
+    	assertEquals(carts.get(0).getCartId(),"killAddToCart" );
+    	assertEquals(carts.get(0).getItems().get(0).getQuantity(), 8);
+    	assertEquals(carts.get(0).getItems().get(0).getItem().getItemId().getProductId(), "X1");	
+    }
+    
     @After
     public void deleteCarts(){
     	mediatorClient.clear();

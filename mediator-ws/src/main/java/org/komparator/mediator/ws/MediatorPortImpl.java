@@ -6,6 +6,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,19 +55,20 @@ public class MediatorPortImpl implements MediatorPortType{
 	
 	private MediatorClient medClient;
 	
-	private ShoppingResultView mostRecentShoppingResult;
+	private Map<String,ShoppingResultView> mostRecentShoppingResults = new TreeMap<String,ShoppingResultView>();
 	private Date latestLifeProof;
 
 	public MediatorPortImpl(MediatorEndpointManager endpointManager) {
 		this.endpointManager = endpointManager;
 		if (this.endpointManager.isPrimary()) {
-			System.out.println("\nConnecting to secondary mediator...\n");
+			System.out.println("Connecting to secondary mediator...");
 			try {
 				this.medClient = new MediatorClient(this.endpointManager.makeSecondaryMedUrl(2));
 			} catch (MediatorClientException e) {
 				System.err.println("Error creating mediator client");
 				System.err.println(e);
 			}
+			System.out.println("Connected to secondary mediator");
 		}
 	}
 
@@ -197,7 +201,14 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 		
 		if(medClient != null){
-			medClient.updateCart(cart);
+			// primary Mediator updates secondary Mediator
+			medClient.updateCart(KomparatorSecurityManager.getMostRecentClientId(),KomparatorSecurityManager.getMostRecentOpId(),cart);
+			
+			if (cartId.equals("killAddToCart")) {
+				System.out.println("    | |\n ___| |_ ___  _ __\n/ __| __/ _ \\| '_ \\\n\\__ \\ || (_) | |_) |\n|___/\\__\\___/| .__/\n             | |\n             |_|    ");
+				System.out.println("\n---------------------------------- Stopped during addToCart ----------------------------------\n");
+				System.exit(0);
+			}
 		}
 
 		System.out.println("Size of cart here is" + cart.getItems().size());
@@ -212,7 +223,10 @@ public class MediatorPortImpl implements MediatorPortType{
 			System.out.println("\nDuplicate BuyCart operation - responding immediatley\n");
 			
 			KomparatorSecurityManager.setDuplicated(false);
-			return mostRecentShoppingResult;
+			
+			String clientId = KomparatorSecurityManager.getMostRecentClientId();
+			
+			return mostRecentShoppingResults.get(clientId);
 		}
 		
 		if( cartId==null || !checkId(cartId.trim()) ) throwInvalidCartId("Cart ID is incorrect, failed.");
@@ -299,18 +313,17 @@ public class MediatorPortImpl implements MediatorPortType{
 			shoppingResult.setTotalPrice(totalprice);
 			//Shopping result finished
 			shoppingResults.add(0, shoppingResult);
+			
 			if(medClient != null){
+				// primary Mediator updates secondary Mediator
 				medClient.updateShopHistory(KomparatorSecurityManager.getMostRecentClientId(),KomparatorSecurityManager.getMostRecentOpId(),shoppingResult);
-				System.out.println("\n---------------------------------- ALTO LÁ!!!!!! ----------------------------------\n");
-				System.exit(0);
-//				try {
-//					TimeUnit.SECONDS.sleep(30);
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
+				
+				if (cartId.equals("killBuyCart")) {
+					System.out.println("    | |\n ___| |_ ___  _ __\n/ __| __/ _ \\| '_ \\\n\\__ \\ || (_) | |_) |\n|___/\\__\\___/| .__/\n             | |\n             |_|    ");
+					System.out.println("\n---------------------------------- Stopped during buyCart ----------------------------------\n");
+					System.exit(0);
+				}
 			}
-			System.out.println("Number of bought carts here is" + NumberOfBoughtCarts);
 			
 			return shoppingResult;
 			
@@ -376,15 +389,15 @@ public class MediatorPortImpl implements MediatorPortType{
 	public void updateShopHistory(String clientId, Integer opId, ShoppingResultView newPurchase) {
 		shoppingResults.add(0, newPurchase);
 		NumberOfBoughtCarts++;
-		mostRecentShoppingResult = newPurchase;
-		System.out.println("\n\nUpdated Shop History (because of BuyCart)");
-		System.out.println("Number of bought carts here is" + NumberOfBoughtCarts);
-		System.out.println("\n");
+		mostRecentShoppingResults.put(clientId,newPurchase);
+		
+		System.out.println("Updated Shop History (because of BuyCart)");
+		
 		KomparatorSecurityManager.getIdMap().put(clientId, opId);
 	}
 
 	@Override
-	public void updateCart(CartView cart) {
+	public void updateCart(String clientId, Integer opId, CartView cart) {
 		boolean newCart = true;
 		for(int i=0;i<carts.size();i++){
 			if(carts.get(i).getCartId().equals(cart.getCartId())) {
@@ -398,7 +411,8 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 
 		System.out.println("Updated Cart (because of addToCart)");
-		System.out.println("Size of cart here is" + cart.getItems().size());
+
+		KomparatorSecurityManager.getIdMap().put(clientId, opId);
 	}
 	
 	@Override

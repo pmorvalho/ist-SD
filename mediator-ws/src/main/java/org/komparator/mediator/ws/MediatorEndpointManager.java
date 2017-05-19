@@ -146,6 +146,8 @@ public class MediatorEndpointManager {
 	public void changeToPrimary() throws Exception{
 		this.isPrimary=true;
 		publishToUDDI();
+		System.out.println("Awaiting connections");
+		System.out.println("Press enter to shutdown");
 	}
 	
 	void publishToUDDI() throws Exception {
@@ -157,6 +159,7 @@ public class MediatorEndpointManager {
 				}
 				uddiNaming = new UDDINaming(uddiURL);
 				uddiNaming.rebind(wsName, wsURL);
+				System.out.printf("Published '%s' to UDDI at %s%n", wsName, uddiURL);
 			}
 		} catch (Exception e) {
 			uddiNaming = null;
