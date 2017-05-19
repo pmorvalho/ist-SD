@@ -39,6 +39,8 @@ public class MediatorClient implements MediatorPortType {
 
 	private static final int RECEIVE_TIMEOUT = 10; // in seconds
 	private static final int CONNECTION_TIMEOUT = 10; // in seconds
+	private static final int RETRY_DELAY = 2; // in seconds
+	private static final int UDDI_RETRY_DELAY = 2; // in seconds
 
 	/** WS service */
      MediatorService service = null;
@@ -118,8 +120,8 @@ public class MediatorClient implements MediatorPortType {
     	try {
 			uddiLookup();
 		} catch (MediatorClientException e) {
-			System.out.println("Failed to find service in UDDI. Retrying in 2 seconds...");
-			sleep(2); //wait 2 seconds before retrying
+			System.out.println("Failed to find service in UDDI. Retrying in " + UDDI_RETRY_DELAY +" seconds...");
+			sleep(UDDI_RETRY_DELAY); //wait x seconds before retrying
 			createStub();
 			return;
 		}
@@ -299,8 +301,8 @@ public class MediatorClient implements MediatorPortType {
 		Throwable cause = wse.getCause();
 		if (cause != null && (cause instanceof SocketTimeoutException || cause instanceof ConnectException)) {
 		    System.out.println("The cause was : " + cause);
-		    System.out.println("Retrying request in 2 seconds...");
-		    sleep(2); //wait 2 seconds before retrying
+		    System.out.println("Retrying request in " + RETRY_DELAY + " seconds...");
+		    sleep(RETRY_DELAY); //wait x seconds before retrying
 			createStub();
 		}
 		else {

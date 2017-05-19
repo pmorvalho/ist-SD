@@ -33,7 +33,7 @@ public class LifeProof extends TimerTask{
 			}
 		}
 		else{
-			if(mediator.getLatestLifeProof() != null && (new Date()).getTime()-mediator.getLatestLifeProof().getTime()>10*1000){
+			if(mediator.getLatestLifeProof() != null && (new Date()).getTime()-mediator.getLatestLifeProof().getTime() > 7*1000){
 				try {
 					mediator.changeToPrimary();
 				} catch (Exception e) {

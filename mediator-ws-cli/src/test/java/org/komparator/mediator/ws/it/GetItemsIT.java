@@ -9,8 +9,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.komparator.mediator.ws.InvalidItemId_Exception;
 import org.komparator.mediator.ws.ItemView;
-//import org.komparator.mediator.ws.InvalidItemId_Exception;
-//import org.komparator.mediator.ws.ItemView;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.BadProduct_Exception;
 import org.komparator.supplier.ws.ProductView;

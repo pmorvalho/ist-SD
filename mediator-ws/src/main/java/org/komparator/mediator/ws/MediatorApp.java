@@ -54,7 +54,7 @@ public class MediatorApp {
 		Timer timer = new Timer(true);
 		LifeProof lifeProof = new LifeProof(endpoint);
 		try {
-			timer.schedule(lifeProof, 1000,5000);
+			timer.schedule(lifeProof, 5000,5000);
 			endpoint.start();
 			endpoint.awaitConnections();
 		} finally {

@@ -131,7 +131,7 @@ public class MediatorPortImpl implements MediatorPortType{
 	}
 
 	@Override
-	public void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
+	public synchronized void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
 	InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {		
 		
 		if(KomparatorSecurityManager.isDuplicated()){
@@ -176,29 +176,27 @@ public class MediatorPortImpl implements MediatorPortType{
 
 		if( supQuantity < itemQty) throwNotEnoughItems("Not enough items, failed.");
 		CartView cart;
-		synchronized(this){
-			for(CartView c : carts){
+		for(CartView c : carts){
 
-				if(c.getCartId().equals(cartId)){
+			if(c.getCartId().equals(cartId)){
 
-					for(CartItemView civ : c.getItems()){
+				for(CartItemView civ : c.getItems()){
 
-						if(civ.getItem().getItemId().getProductId().equals(itemId.getProductId()) && 
-								civ.getItem().getItemId().getSupplierId().equals(itemId.getSupplierId())){
-							int qty = civ.getQuantity() + itemQty;
-							if(qty > supQuantity) throwNotEnoughItems("Not enough items, failed.");
-							civ.setQuantity(qty);
-							return;
-						}
+					if(civ.getItem().getItemId().getProductId().equals(itemId.getProductId()) && 
+							civ.getItem().getItemId().getSupplierId().equals(itemId.getSupplierId())){
+						int qty = civ.getQuantity() + itemQty;
+						if(qty > supQuantity) throwNotEnoughItems("Not enough items, failed.");
+						civ.setQuantity(qty);
+						return;
 					}
-
-					c.getItems().add(createCartItemView(product, client, itemQty));
-					return;
 				}
+
+				c.getItems().add(createCartItemView(product, client, itemQty));
+				return;
 			}
-			cart = createCartView(cartId, product, client, itemQty);
-			carts.add(cart);
 		}
+		cart = createCartView(cartId, product, client, itemQty);
+		carts.add(cart);
 		
 		if(medClient != null){
 			// primary Mediator updates secondary Mediator
@@ -215,7 +213,7 @@ public class MediatorPortImpl implements MediatorPortType{
 	}
 
 	@Override
-	public ShoppingResultView buyCart(String cartId, String creditCardNr)
+	public synchronized ShoppingResultView buyCart(String cartId, String creditCardNr)
 			throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
 		
 		if(KomparatorSecurityManager.isDuplicated()){
@@ -238,98 +236,94 @@ public class MediatorPortImpl implements MediatorPortType{
 		List<CartItemView> allItems = new ArrayList<CartItemView>();
 		int totalprice=0;
 		boolean foundCart=false;
-		synchronized(this){
-			for(CartView c : carts){
+		for(CartView c : carts){
 
-				if(c.getCartId().equals(cartId)){
-					foundCart=true;
-					if(c.getItems().size()==0){
-						throwEmptyCart("The selected cart is empty, failed.");
+			if(c.getCartId().equals(cartId)){
+				foundCart=true;
+				if(c.getItems().size()==0){
+					throwEmptyCart("The selected cart is empty, failed.");
+				}
+
+				for(CartItemView civ : c.getItems()){
+					allItems.add(civ);
+
+					String productId = civ.getItem().getItemId().getProductId();
+					String supplierId = civ.getItem().getItemId().getSupplierId();
+					int quantity = civ.getQuantity();
+					String supplier;
+					SupplierClient client;
+					try {
+						supplier = endpointManager.getUddiNaming().lookup(supplierId);
+					} catch (UDDINamingException e) {
+						System.out.println("Could not find supplier, continuing");
+						continue;
 					}
 
-					for(CartItemView civ : c.getItems()){
-						allItems.add(civ);
+					client= getSupplierClient(supplier);
 
-						String productId = civ.getItem().getItemId().getProductId();
-						String supplierId = civ.getItem().getItemId().getSupplierId();
-						int quantity = civ.getQuantity();
-						String supplier;
-						SupplierClient client;
-						try {
-							supplier = endpointManager.getUddiNaming().lookup(supplierId);
-						} catch (UDDINamingException e) {
-							System.out.println("Could not find supplier, continuing");
-							continue;
-						}
-
-						client= getSupplierClient(supplier);
-
-						try {
-							client.buyProduct(productId, quantity);
-						} catch (BadProductId_Exception e) {
-							System.out.println("Malformed product ID, continuing");
-							continue;
-						} catch (BadQuantity_Exception e) {
-							System.out.println("Invalid quantity, continuing");
-							continue;
-						} catch (InsufficientQuantity_Exception e) {
-							System.out.println("Insufficient quantity available, continuing");
-							continue;
-						}
-						//Set purchased items
-						shoppingResult.getPurchasedItems().add(civ);
-						totalprice+= civ.getItem().getPrice()*civ.getQuantity();
+					try {
+						client.buyProduct(productId, quantity);
+					} catch (BadProductId_Exception e) {
+						System.out.println("Malformed product ID, continuing");
+						continue;
+					} catch (BadQuantity_Exception e) {
+						System.out.println("Invalid quantity, continuing");
+						continue;
+					} catch (InsufficientQuantity_Exception e) {
+						System.out.println("Insufficient quantity available, continuing");
+						continue;
 					}
+					//Set purchased items
+					shoppingResult.getPurchasedItems().add(civ);
+					totalprice+= civ.getItem().getPrice()*civ.getQuantity();
 				}
 			}
-
-			if(!foundCart){
-				throwInvalidCartId("Could not find cart, failed");
-			}
-
-			CreditCardClient ccClient = getCreditCardClient(getCreditCard());
-			if(!ccClient.validateNumber(creditCardNr)){
-				throwInvalidCreditCard("Invalid Credit Card, could not validate number, failed");
-			}
-			
-			//set dropped items
-			for(CartItemView civ : allItems){
-				if(!shoppingResult.getPurchasedItems().contains(civ)){
-					shoppingResult.getDroppedItems().add(civ);
-				}
-			}
-
-			//set result
-			if(shoppingResult.getPurchasedItems().isEmpty()){
-				shoppingResult.setResult(Result.EMPTY);
-			}
-			else if(shoppingResult.getPurchasedItems().equals(allItems)){
-				shoppingResult.setResult(Result.COMPLETE);
-			}
-			else{
-				shoppingResult.setResult(Result.PARTIAL);
-			}
-			//Set price
-			shoppingResult.setTotalPrice(totalprice);
-			//Shopping result finished
-			shoppingResults.add(0, shoppingResult);
-			
-			if(medClient != null){
-				// primary Mediator updates secondary Mediator
-				medClient.updateShopHistory(KomparatorSecurityManager.getMostRecentClientId(),KomparatorSecurityManager.getMostRecentOpId(),shoppingResult);
-				
-				if (cartId.equals("killBuyCart")) {
-					System.out.println("    | |\n ___| |_ ___  _ __\n/ __| __/ _ \\| '_ \\\n\\__ \\ || (_) | |_) |\n|___/\\__\\___/| .__/\n             | |\n             |_|    ");
-					System.out.println("\n---------------------------------- Stopped during buyCart ----------------------------------\n");
-					System.exit(0);
-				}
-			}
-			
-			return shoppingResult;
-			
 		}
+
+		if(!foundCart){
+			throwInvalidCartId("Could not find cart, failed");
+		}
+
+		CreditCardClient ccClient = getCreditCardClient(getCreditCard());
+		if(!ccClient.validateNumber(creditCardNr)){
+			throwInvalidCreditCard("Invalid Credit Card, could not validate number, failed");
+		}
+		
+		//set dropped items
+		for(CartItemView civ : allItems){
+			if(!shoppingResult.getPurchasedItems().contains(civ)){
+				shoppingResult.getDroppedItems().add(civ);
+			}
+		}
+
+		//set result
+		if(shoppingResult.getPurchasedItems().isEmpty()){
+			shoppingResult.setResult(Result.EMPTY);
+		}
+		else if(shoppingResult.getPurchasedItems().equals(allItems)){
+			shoppingResult.setResult(Result.COMPLETE);
+		}
+		else{
+			shoppingResult.setResult(Result.PARTIAL);
+		}
+		//Set price
+		shoppingResult.setTotalPrice(totalprice);
+		//Shopping result finished
+		shoppingResults.add(0, shoppingResult);
+		
+		if(medClient != null){
+			// primary Mediator updates secondary Mediator
+			medClient.updateShopHistory(KomparatorSecurityManager.getMostRecentClientId(),KomparatorSecurityManager.getMostRecentOpId(),shoppingResult);
+			
+			if (cartId.equals("killBuyCart")) {
+				System.out.println("    | |\n ___| |_ ___  _ __\n/ __| __/ _ \\| '_ \\\n\\__ \\ || (_) | |_) |\n|___/\\__\\___/| .__/\n             | |\n             |_|    ");
+				System.out.println("\n---------------------------------- Stopped during buyCart ----------------------------------\n");
+				System.exit(0);
+			}
+		}
+		
+		return shoppingResult;
 	}
-	
     
 	// Auxiliary operations --------------------------------------------------	
 	
