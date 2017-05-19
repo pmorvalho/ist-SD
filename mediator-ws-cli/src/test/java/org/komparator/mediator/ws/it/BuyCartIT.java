@@ -1,7 +1,7 @@
 package org.komparator.mediator.ws.it;
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.After;
 import org.junit.Before;
@@ -108,6 +108,13 @@ public class BuyCartIT extends BaseIT {
 			id.setProductId("Z1");
 			id.setSupplierId(supplierClients.get(2).getWsName());
 			mediatorClient.addToCart("Cart3",id, 30);
+		}
+		// cart for special case where primary mediator is shut down
+		{
+			ItemIdView id = new ItemIdView();
+			id.setProductId("Z1");
+			id.setSupplierId(supplierClients.get(2).getWsName());
+			mediatorClient.addToCart("JohnWilkesBooth",id, 1);
 		}
 		
 		
@@ -250,6 +257,18 @@ public class BuyCartIT extends BaseIT {
     	
     	assertEquals(2,mediatorClient.shopHistory().size());
     	
+    }
+    
+    // new test - primary Mediator will be shut down during buyCart but test should not fail
+    @Test
+    public void replacePrimary() throws InvalidItemId_Exception, EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
+    	ShoppingResultView shoppingResult = mediatorClient.buyCart("JohnWilkesBooth","4024007102923926");
+    	assertEquals("CartResult1",shoppingResult.getId());
+    	assertEquals(Result.COMPLETE,shoppingResult.getResult());
+    	assertEquals(1,shoppingResult.getPurchasedItems().size());
+    	assertEquals(0,shoppingResult.getDroppedItems().size());
+    	assertEquals(30,shoppingResult.getTotalPrice());
+    	assertEquals(1,mediatorClient.shopHistory().size());
     }
     
     

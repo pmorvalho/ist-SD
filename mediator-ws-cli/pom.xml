@@ -62,7 +62,6 @@
         	<groupId>org.komparator.A68</groupId>
         	<artifactId>security</artifactId>
         	<version>1.0-SNAPSHOT</version>
-        	<scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -97,6 +96,7 @@
                     <wsdlFiles>
                         <wsdlFile>${wsdl.filename}</wsdlFile>
                     </wsdlFiles>
+                    <!-- <packageName>org.komparator.mediator.ws.cli</packageName> -->
                 </configuration>
                 <dependencies>
                     <dependency>

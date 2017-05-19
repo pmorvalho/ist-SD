@@ -1,6 +1,7 @@
 package org.komparator.mediator.ws;
 
 import java.io.IOException;
+import java.util.Date;
 
 import javax.xml.ws.Endpoint;
 
@@ -13,6 +14,8 @@ public class MediatorEndpointManager {
 	private String uddiURL = null;
 	/** Web Service name */
 	private String wsName = null;
+	
+	private boolean isPrimary = true;
 
 	/** Get Web Service UDDI publication name */
 	public String getWsName() {
@@ -23,7 +26,7 @@ public class MediatorEndpointManager {
 	private String wsURL = null;
 
 	/** Port implementation */
-	private MediatorPortImpl portImpl = new MediatorPortImpl(this);
+	private MediatorPortImpl portImpl;
 
 	/** Obtain Port implementation */
 	public MediatorPortType getPort() {
@@ -50,6 +53,14 @@ public class MediatorEndpointManager {
 	public void setVerbose(boolean verbose) {
 		this.verbose = verbose;
 	}
+	
+	public boolean isPrimary(){
+		return this.isPrimary;
+	}
+	
+	public Date getLatestLifeProof() {
+		return portImpl.getLatestLifeProof();
+	}
 
 	/** constructor with provided UDDI location, WS name, and WS URL */
 	public MediatorEndpointManager(String uddiURL, String wsName, String wsURL) {
@@ -63,7 +74,18 @@ public class MediatorEndpointManager {
 		if (wsURL == null)
 			throw new NullPointerException("Web Service URL cannot be null!");
 		this.wsURL = wsURL;
+		this.uddiURL = null;
+		this.wsName = null;
 	}
+	
+	public MediatorEndpointManager(String uddiURL, String wsName, String wsURL, boolean isPrim) {
+		this.uddiURL = uddiURL;
+		this.wsName = wsName;
+		this.wsURL = wsURL;
+		this.isPrimary = isPrim;
+		this.portImpl = new MediatorPortImpl(this);
+	}
+
 
 	/* end point management */
 
@@ -83,6 +105,7 @@ public class MediatorEndpointManager {
 			}
 			throw e;
 		}
+		
 		publishToUDDI();
 	}
 
@@ -119,16 +142,24 @@ public class MediatorEndpointManager {
 	}
 
 	/* UDDI */
-
+	
+	public void changeToPrimary() throws Exception{
+		this.isPrimary=true;
+		publishToUDDI();
+		System.out.println("Awaiting connections");
+		System.out.println("Press enter to shutdown");
+	}
+	
 	void publishToUDDI() throws Exception {
 		try {
 			// publish to UDDI
-			if (uddiURL != null) {
+			if (uddiURL != null && isPrimary) {
 				if (verbose) {
 					System.out.printf("Publishing '%s' to UDDI at %s%n", wsName, uddiURL);
 				}
 				uddiNaming = new UDDINaming(uddiURL);
 				uddiNaming.rebind(wsName, wsURL);
+				System.out.printf("Published '%s' to UDDI at %s%n", wsName, uddiURL);
 			}
 		} catch (Exception e) {
 			uddiNaming = null;
@@ -154,6 +185,10 @@ public class MediatorEndpointManager {
 				System.out.printf("Caught exception when unbinding: %s%n", e);
 			}
 		}
+	}
+	
+	String makeSecondaryMedUrl(int n){
+		return "http://localhost:807"+n+"/mediator-ws/endpoint";
 	}
 
 }

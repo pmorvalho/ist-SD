@@ -4,13 +4,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.jws.HandlerChain;
 import javax.jws.WebService;
 
+import org.komparator.mediator.ws.cli.MediatorClient;
+import org.komparator.mediator.ws.cli.MediatorClientException;
+import org.komparator.security.KomparatorSecurityManager;
 import org.komparator.supplier.ws.BadProductId_Exception;
 import org.komparator.supplier.ws.BadQuantity_Exception;
 import org.komparator.supplier.ws.BadText_Exception;
@@ -45,9 +52,24 @@ public class MediatorPortImpl implements MediatorPortType{
 	private List<CartView> carts = new ArrayList<CartView>();
 	
 	private static int NumberOfBoughtCarts;
+	
+	private MediatorClient medClient;
+	
+	private Map<String,ShoppingResultView> mostRecentShoppingResults = new TreeMap<String,ShoppingResultView>();
+	private Date latestLifeProof;
 
 	public MediatorPortImpl(MediatorEndpointManager endpointManager) {
 		this.endpointManager = endpointManager;
+		if (this.endpointManager.isPrimary()) {
+			System.out.println("Connecting to secondary mediator...");
+			try {
+				this.medClient = new MediatorClient(this.endpointManager.makeSecondaryMedUrl(2));
+			} catch (MediatorClientException e) {
+				System.err.println("Error creating mediator client");
+				System.err.println(e);
+			}
+			System.out.println("Connected to secondary mediator");
+		}
 	}
 
 	// Main operations -------------------------------------------------------
@@ -109,8 +131,16 @@ public class MediatorPortImpl implements MediatorPortType{
 	}
 
 	@Override
-	public void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
+	public synchronized void addToCart(String cartId, ItemIdView itemId, int itemQty) throws InvalidCartId_Exception,
 	InvalidItemId_Exception, InvalidQuantity_Exception, NotEnoughItems_Exception {		
+		
+		if(KomparatorSecurityManager.isDuplicated()){
+			
+			System.out.println("\nDuplicate addToCart operation - responding immediatley\n");
+			
+			KomparatorSecurityManager.setDuplicated(false);
+			return; 
+		}
 		
 		if( cartId == null || !checkId(cartId.trim()) ) throwInvalidCartId("Cart ID is incorrect, failed.");
 				
@@ -145,34 +175,57 @@ public class MediatorPortImpl implements MediatorPortType{
 		}
 
 		if( supQuantity < itemQty) throwNotEnoughItems("Not enough items, failed.");
-		synchronized(this){
-			for(CartView c : carts){
+		CartView cart;
+		for(CartView c : carts){
 
-				if(c.getCartId().equals(cartId)){
+			if(c.getCartId().equals(cartId)){
 
-					for(CartItemView civ : c.getItems()){
+				for(CartItemView civ : c.getItems()){
 
-						if(civ.getItem().getItemId().getProductId().equals(itemId.getProductId()) && 
-								civ.getItem().getItemId().getSupplierId().equals(itemId.getSupplierId())){
-							int qty = civ.getQuantity() + itemQty;
-							if(qty > supQuantity) throwNotEnoughItems("Not enough items, failed.");
-							civ.setQuantity(qty);
-							return;
-						}
+					if(civ.getItem().getItemId().getProductId().equals(itemId.getProductId()) && 
+							civ.getItem().getItemId().getSupplierId().equals(itemId.getSupplierId())){
+						int qty = civ.getQuantity() + itemQty;
+						if(qty > supQuantity) throwNotEnoughItems("Not enough items, failed.");
+						civ.setQuantity(qty);
+						return;
 					}
-
-					c.getItems().add(createCartItemView(product, client, itemQty));
-					return;
 				}
-			}
 
-			carts.add(createCartView(cartId, product, client, itemQty));
+				c.getItems().add(createCartItemView(product, client, itemQty));
+				return;
+			}
 		}
+		cart = createCartView(cartId, product, client, itemQty);
+		carts.add(cart);
+		
+		if(medClient != null){
+			// primary Mediator updates secondary Mediator
+			medClient.updateCart(KomparatorSecurityManager.getMostRecentClientId(),KomparatorSecurityManager.getMostRecentOpId(),cart);
+			
+			if (cartId.equals("DiogoAlves")) {
+				System.out.println("    | |\n ___| |_ ___  _ __\n/ __| __/ _ \\| '_ \\\n\\__ \\ || (_) | |_) |\n|___/\\__\\___/| .__/\n             | |\n             |_|    ");
+				System.out.println("\n---------------------------------- Stopped during addToCart ----------------------------------\n");
+				System.exit(0);
+			}
+		}
+
+		System.out.println("Size of cart here is" + cart.getItems().size());
 	}
 
 	@Override
-	public ShoppingResultView buyCart(String cartId, String creditCardNr)
+	public synchronized ShoppingResultView buyCart(String cartId, String creditCardNr)
 			throws EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
+		
+		if(KomparatorSecurityManager.isDuplicated()){
+			
+			System.out.println("\nDuplicate BuyCart operation - responding immediatley\n");
+			
+			KomparatorSecurityManager.setDuplicated(false);
+			
+			String clientId = KomparatorSecurityManager.getMostRecentClientId();
+			
+			return mostRecentShoppingResults.get(clientId);
+		}
 		
 		if( cartId==null || !checkId(cartId.trim()) ) throwInvalidCartId("Cart ID is incorrect, failed.");
 		
@@ -183,85 +236,94 @@ public class MediatorPortImpl implements MediatorPortType{
 		List<CartItemView> allItems = new ArrayList<CartItemView>();
 		int totalprice=0;
 		boolean foundCart=false;
-		synchronized(this){
-			for(CartView c : carts){
+		for(CartView c : carts){
 
-				if(c.getCartId().equals(cartId)){
-					foundCart=true;
-					if(c.getItems().size()==0){
-						throwEmptyCart("The selected cart is empty, failed.");
+			if(c.getCartId().equals(cartId)){
+				foundCart=true;
+				if(c.getItems().size()==0){
+					throwEmptyCart("The selected cart is empty, failed.");
+				}
+
+				for(CartItemView civ : c.getItems()){
+					allItems.add(civ);
+
+					String productId = civ.getItem().getItemId().getProductId();
+					String supplierId = civ.getItem().getItemId().getSupplierId();
+					int quantity = civ.getQuantity();
+					String supplier;
+					SupplierClient client;
+					try {
+						supplier = endpointManager.getUddiNaming().lookup(supplierId);
+					} catch (UDDINamingException e) {
+						System.out.println("Could not find supplier, continuing");
+						continue;
 					}
 
-					for(CartItemView civ : c.getItems()){
-						allItems.add(civ);
+					client= getSupplierClient(supplier);
 
-						String productId = civ.getItem().getItemId().getProductId();
-						String supplierId = civ.getItem().getItemId().getSupplierId();
-						int quantity = civ.getQuantity();
-						String supplier;
-						SupplierClient client;
-						try {
-							supplier = endpointManager.getUddiNaming().lookup(supplierId);
-						} catch (UDDINamingException e) {
-							System.out.println("Could not find supplier, continuing");
-							continue;
-						}
-
-						client= getSupplierClient(supplier);
-
-						try {
-							client.buyProduct(productId, quantity);
-						} catch (BadProductId_Exception e) {
-							System.out.println("Malformed product ID, continuing");
-							continue;
-						} catch (BadQuantity_Exception e) {
-							System.out.println("Invalid quantity, continuing");
-							continue;
-						} catch (InsufficientQuantity_Exception e) {
-							System.out.println("Insufficient quantity available, continuing");
-							continue;
-						}
-						//Set purchased items
-						shoppingResult.getPurchasedItems().add(civ);
-						totalprice+= civ.getItem().getPrice()*civ.getQuantity();
+					try {
+						client.buyProduct(productId, quantity);
+					} catch (BadProductId_Exception e) {
+						System.out.println("Malformed product ID, continuing");
+						continue;
+					} catch (BadQuantity_Exception e) {
+						System.out.println("Invalid quantity, continuing");
+						continue;
+					} catch (InsufficientQuantity_Exception e) {
+						System.out.println("Insufficient quantity available, continuing");
+						continue;
 					}
+					//Set purchased items
+					shoppingResult.getPurchasedItems().add(civ);
+					totalprice+= civ.getItem().getPrice()*civ.getQuantity();
 				}
 			}
-
-			if(!foundCart){
-				throwInvalidCartId("Could not find cart, failed");
-			}
-
-			CreditCardClient ccClient = getCreditCardClient(getCreditCard());
-			if(!ccClient.validateNumber(creditCardNr)){
-				throwInvalidCreditCard("Invalid Credit Card, could not validate number, failed");
-			}
-			
-			//set dropped items
-			for(CartItemView civ : allItems){
-				if(!shoppingResult.getPurchasedItems().contains(civ)){
-					shoppingResult.getDroppedItems().add(civ);
-				}
-			}
-
-			//set result
-			if(shoppingResult.getPurchasedItems().isEmpty()){
-				shoppingResult.setResult(Result.EMPTY);
-			}
-			else if(shoppingResult.getPurchasedItems().equals(allItems)){
-				shoppingResult.setResult(Result.COMPLETE);
-			}
-			else{
-				shoppingResult.setResult(Result.PARTIAL);
-			}
-			//Set price
-			shoppingResult.setTotalPrice(totalprice);
-			//Shopping result finished
-			shoppingResults.add(0, shoppingResult);
-			return shoppingResult;
 		}
+
+		if(!foundCart){
+			throwInvalidCartId("Could not find cart, failed");
+		}
+
+		CreditCardClient ccClient = getCreditCardClient(getCreditCard());
+		if(!ccClient.validateNumber(creditCardNr)){
+			throwInvalidCreditCard("Invalid Credit Card, could not validate number, failed");
+		}
+		
+		//set dropped items
+		for(CartItemView civ : allItems){
+			if(!shoppingResult.getPurchasedItems().contains(civ)){
+				shoppingResult.getDroppedItems().add(civ);
+			}
+		}
+
+		//set result
+		if(shoppingResult.getPurchasedItems().isEmpty()){
+			shoppingResult.setResult(Result.EMPTY);
+		}
+		else if(shoppingResult.getPurchasedItems().equals(allItems)){
+			shoppingResult.setResult(Result.COMPLETE);
+		}
+		else{
+			shoppingResult.setResult(Result.PARTIAL);
+		}
+		//Set price
+		shoppingResult.setTotalPrice(totalprice);
+		//Shopping result finished
+		shoppingResults.add(0, shoppingResult);
+		
+		if(medClient != null){
+			// primary Mediator updates secondary Mediator
+			medClient.updateShopHistory(KomparatorSecurityManager.getMostRecentClientId(),KomparatorSecurityManager.getMostRecentOpId(),shoppingResult);
+			
+			if (cartId.equals("JohnWilkesBooth")) {
+				System.out.println("    | |\n ___| |_ ___  _ __\n/ __| __/ _ \\| '_ \\\n\\__ \\ || (_) | |_) |\n|___/\\__\\___/| .__/\n             | |\n             |_|    ");
+				System.out.println("\n---------------------------------- Stopped during buyCart ----------------------------------\n");
+				System.exit(0);
+			}
+		}
+		
+		return shoppingResult;
 	}
-	
     
 	// Auxiliary operations --------------------------------------------------	
 	
@@ -289,6 +351,9 @@ public class MediatorPortImpl implements MediatorPortType{
 		carts.clear();
 		shoppingResults.clear();
 		NumberOfBoughtCarts=0;
+		
+		if (medClient != null)
+			medClient.updateClear();
 	}
 
 	@Override
@@ -302,6 +367,54 @@ public class MediatorPortImpl implements MediatorPortType{
 		return shoppingResults;
 	}
 	
+	@Override
+	public void imAlive() {
+		System.out.println("imAlive received!");
+		if(endpointManager.isPrimary()){
+			return;
+		}
+		else {
+			this.latestLifeProof= new Date();
+			return;
+		}
+	}
+	
+	@Override
+	public void updateShopHistory(String clientId, Integer opId, ShoppingResultView newPurchase) {
+		shoppingResults.add(0, newPurchase);
+		NumberOfBoughtCarts++;
+		mostRecentShoppingResults.put(clientId,newPurchase);
+		
+		System.out.println("Updated Shop History (because of BuyCart)");
+		
+		KomparatorSecurityManager.getIdMap().put(clientId, opId);
+	}
+
+	@Override
+	public void updateCart(String clientId, Integer opId, CartView cart) {
+		boolean newCart = true;
+		for(int i=0;i<carts.size();i++){
+			if(carts.get(i).getCartId().equals(cart.getCartId())) {
+				carts.set(i,cart);
+				newCart = false;
+				break;
+			}
+		}
+		if (newCart) {
+			carts.add(cart);
+		}
+
+		System.out.println("Updated Cart (because of addToCart)");
+
+		KomparatorSecurityManager.getIdMap().put(clientId, opId);
+	}
+	
+	@Override
+	public void updateClear() {
+		carts.clear();
+		shoppingResults.clear();
+		NumberOfBoughtCarts=0;
+	}
 	
 	// General Helpers -------------------------------------------------------
 	
@@ -402,6 +515,10 @@ public class MediatorPortImpl implements MediatorPortType{
 	    		return i1.compareTo(i2);
 	    	}
 	    }
+	}
+	
+	public Date getLatestLifeProof() {
+		return latestLifeProof;
 	}
 	
 	// Checks if id is an alphanumeric string without spaces
