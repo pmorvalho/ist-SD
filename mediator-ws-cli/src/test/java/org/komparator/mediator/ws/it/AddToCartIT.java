@@ -400,11 +400,11 @@ public class AddToCartIT extends BaseIT {
 		item.setProductId("X1");
 		item.setSupplierId(supplierClients.get(0).getWsName());
 
-    	mediatorClient.addToCart("killAddToCart", item, 8);
+    	mediatorClient.addToCart("DiogoAlves", item, 8);
     	
     	List<CartView> carts = mediatorClient.listCarts();
     	assertEquals(1,carts.size());
-    	assertEquals(carts.get(0).getCartId(),"killAddToCart" );
+    	assertEquals(carts.get(0).getCartId(),"DiogoAlves" );
     	assertEquals(carts.get(0).getItems().get(0).getQuantity(), 8);
     	assertEquals(carts.get(0).getItems().get(0).getItem().getItemId().getProductId(), "X1");	
     }

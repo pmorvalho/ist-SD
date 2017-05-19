@@ -202,7 +202,7 @@ public class MediatorPortImpl implements MediatorPortType{
 			// primary Mediator updates secondary Mediator
 			medClient.updateCart(KomparatorSecurityManager.getMostRecentClientId(),KomparatorSecurityManager.getMostRecentOpId(),cart);
 			
-			if (cartId.equals("killAddToCart")) {
+			if (cartId.equals("DiogoAlves")) {
 				System.out.println("    | |\n ___| |_ ___  _ __\n/ __| __/ _ \\| '_ \\\n\\__ \\ || (_) | |_) |\n|___/\\__\\___/| .__/\n             | |\n             |_|    ");
 				System.out.println("\n---------------------------------- Stopped during addToCart ----------------------------------\n");
 				System.exit(0);
@@ -315,7 +315,7 @@ public class MediatorPortImpl implements MediatorPortType{
 			// primary Mediator updates secondary Mediator
 			medClient.updateShopHistory(KomparatorSecurityManager.getMostRecentClientId(),KomparatorSecurityManager.getMostRecentOpId(),shoppingResult);
 			
-			if (cartId.equals("killBuyCart")) {
+			if (cartId.equals("JohnWilkesBooth")) {
 				System.out.println("    | |\n ___| |_ ___  _ __\n/ __| __/ _ \\| '_ \\\n\\__ \\ || (_) | |_) |\n|___/\\__\\___/| .__/\n             | |\n             |_|    ");
 				System.out.println("\n---------------------------------- Stopped during buyCart ----------------------------------\n");
 				System.exit(0);

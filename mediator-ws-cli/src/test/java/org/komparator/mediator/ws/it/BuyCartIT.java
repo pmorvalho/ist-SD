@@ -114,7 +114,7 @@ public class BuyCartIT extends BaseIT {
 			ItemIdView id = new ItemIdView();
 			id.setProductId("Z1");
 			id.setSupplierId(supplierClients.get(2).getWsName());
-			mediatorClient.addToCart("killBuyCart",id, 1);
+			mediatorClient.addToCart("JohnWilkesBooth",id, 1);
 		}
 		
 		
@@ -262,7 +262,7 @@ public class BuyCartIT extends BaseIT {
     // new test - primary Mediator will be shut down during buyCart but test should not fail
     @Test
     public void replacePrimary() throws InvalidItemId_Exception, EmptyCart_Exception, InvalidCartId_Exception, InvalidCreditCard_Exception {
-    	ShoppingResultView shoppingResult = mediatorClient.buyCart("killBuyCart","4024007102923926");
+    	ShoppingResultView shoppingResult = mediatorClient.buyCart("JohnWilkesBooth","4024007102923926");
     	assertEquals("CartResult1",shoppingResult.getId());
     	assertEquals(Result.COMPLETE,shoppingResult.getResult());
     	assertEquals(1,shoppingResult.getPurchasedItems().size());
