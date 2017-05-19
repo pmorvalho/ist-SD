@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -301,7 +300,7 @@ public class MediatorPortImpl implements MediatorPortType{
 			//Shopping result finished
 			shoppingResults.add(0, shoppingResult);
 			if(medClient != null){
-				medClient.updateShopHistory(shoppingResult);
+				medClient.updateShopHistory(KomparatorSecurityManager.getMostRecentClientId(),KomparatorSecurityManager.getMostRecentOpId(),shoppingResult);
 				System.out.println("\n---------------------------------- ALTO LÁ!!!!!! ----------------------------------\n");
 				System.exit(0);
 //				try {
@@ -374,13 +373,14 @@ public class MediatorPortImpl implements MediatorPortType{
 	}
 	
 	@Override
-	public void updateShopHistory(ShoppingResultView newPurchase) {
+	public void updateShopHistory(String clientId, Integer opId, ShoppingResultView newPurchase) {
 		shoppingResults.add(0, newPurchase);
 		NumberOfBoughtCarts++;
 		mostRecentShoppingResult = newPurchase;
 		System.out.println("\n\nUpdated Shop History (because of BuyCart)");
 		System.out.println("Number of bought carts here is" + NumberOfBoughtCarts);
 		System.out.println("\n");
+		KomparatorSecurityManager.getIdMap().put(clientId, opId);
 	}
 
 	@Override

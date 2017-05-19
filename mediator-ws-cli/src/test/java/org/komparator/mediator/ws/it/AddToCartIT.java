@@ -7,20 +7,12 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.komparator.mediator.ws.cli.CartView;
-import org.komparator.mediator.ws.cli.EmptyCart_Exception;
-import org.komparator.mediator.ws.cli.InvalidCartId_Exception;
-import org.komparator.mediator.ws.cli.InvalidCreditCard_Exception;
-import org.komparator.mediator.ws.cli.InvalidItemId_Exception;
-import org.komparator.mediator.ws.cli.InvalidQuantity_Exception;
-import org.komparator.mediator.ws.cli.InvalidText_Exception;
-import org.komparator.mediator.ws.cli.ItemIdView;
-import org.komparator.mediator.ws.cli.ItemView;
-import org.komparator.mediator.ws.cli.MediatorPortType;
-import org.komparator.mediator.ws.cli.MediatorService;
-import org.komparator.mediator.ws.cli.NotEnoughItems_Exception;
-import org.komparator.mediator.ws.cli.ShoppingResultView;
+import org.komparator.mediator.ws.CartView;
+import org.komparator.mediator.ws.InvalidCartId_Exception;
+import org.komparator.mediator.ws.InvalidItemId_Exception;
+import org.komparator.mediator.ws.InvalidQuantity_Exception;
+import org.komparator.mediator.ws.ItemIdView;
+import org.komparator.mediator.ws.NotEnoughItems_Exception;
 /*
 import org.komparator.mediator.ws.CartView;
 import org.komparator.mediator.ws.InvalidCartId_Exception;

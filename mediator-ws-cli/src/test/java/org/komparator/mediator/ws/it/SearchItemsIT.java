@@ -1,25 +1,14 @@
 package org.komparator.mediator.ws.it;
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import org.komparator.mediator.ws.cli.CartView;
-import org.komparator.mediator.ws.cli.EmptyCart_Exception;
-import org.komparator.mediator.ws.cli.InvalidCartId_Exception;
-import org.komparator.mediator.ws.cli.InvalidCreditCard_Exception;
-import org.komparator.mediator.ws.cli.InvalidItemId_Exception;
-import org.komparator.mediator.ws.cli.InvalidQuantity_Exception;
-import org.komparator.mediator.ws.cli.InvalidText_Exception;
-import org.komparator.mediator.ws.cli.ItemIdView;
-import org.komparator.mediator.ws.cli.ItemView;
-import org.komparator.mediator.ws.cli.MediatorPortType;
-import org.komparator.mediator.ws.cli.MediatorService;
-import org.komparator.mediator.ws.cli.NotEnoughItems_Exception;
-import org.komparator.mediator.ws.cli.ShoppingResultView;
-import org.komparator.mediator.ws.cli.Result;
+import org.komparator.mediator.ws.InvalidText_Exception;
+import org.komparator.mediator.ws.ItemView;
 //import org.komparator.mediator.ws.InvalidText_Exception;
 //import org.komparator.mediator.ws.ItemView;
 import org.komparator.supplier.ws.BadProductId_Exception;
