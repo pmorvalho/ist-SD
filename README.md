@@ -1,8 +1,10 @@
-# Projeto de Sistemas Distribuídos 2016-2017 #
+# Sistemas Distribuídos
 
-LEIC-A
+[IST](https://tecnico.ulisboa.pt/pt/) 
 
-Sistemas Distribuídos - 3º ano 2016-2017
+[LEIC-A](https://fenix.tecnico.ulisboa.pt/cursos/leic-a/descricao)
+
+[Sistemas Distribuídos](https://fenix.tecnico.ulisboa.pt/disciplinas/SDis12645111326/2016-2017/2-semestre) - 3º ano 2016-2017
 
 Nota: 20/20
 
