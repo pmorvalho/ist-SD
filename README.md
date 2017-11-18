@@ -1,5 +1,11 @@
 # Projeto de Sistemas Distribuídos 2016-2017 #
 
+LEIC-A
+
+Sistemas Distribuídos - 3º ano 2016-2017
+
+Nota: 20/20
+
 Grupo A68
 
 | Número | Nome | Email | GitHub |
