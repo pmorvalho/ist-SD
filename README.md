@@ -6,6 +6,8 @@
 
 [Sistemas Distribuídos](https://fenix.tecnico.ulisboa.pt/disciplinas/SDis12645111326/2016-2017/2-semestre) - 3º ano 2016-2017
 
+[Enunciado](https://github.com/pmorvalho/ist-SD/blob/master/enunciado_projecto_SD_2016_17.pdf)
+
 Nota: 20/20
 
 Grupo A68
